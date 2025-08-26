@@ -2,6 +2,8 @@
 {
     public class SociosViewModel : ViewModelBase
     {
-        
+        public SociosViewModel()
+        {
+        }
     }
 }

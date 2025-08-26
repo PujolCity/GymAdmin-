@@ -2,4 +2,7 @@
 
 public class PagosViewModel : ViewModelBase
 {
+    public PagosViewModel()
+    {
+    }
 }

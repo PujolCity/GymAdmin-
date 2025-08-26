@@ -2,4 +2,7 @@
 
 public class MembresiasViewModel : ViewModelBase
 {
+    public MembresiasViewModel()
+    {
+    }
 }
