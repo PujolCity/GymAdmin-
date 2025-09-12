@@ -1,0 +1,29 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Efecto de sombra para diálogos -->
+    <DropShadowEffect x:Key="DialogShadowEffect"
+                      Color="#40000000"
+                      BlurRadius="20"
+                      ShadowDepth="0"
+                      Opacity="0.8"
+                      Direction="0"
+                      RenderingBias="Quality"/>
+
+    <!-- Efecto de sombra más suave (alternativa) -->
+    <DropShadowEffect x:Key="DialogShadowEffectLight"
+                      Color="#30000000"
+                      BlurRadius="15"
+                      ShadowDepth="0"
+                      Opacity="0.6"
+                      Direction="0"/>
+
+    <!-- Efecto de sombra para tarjetas -->
+    <DropShadowEffect x:Key="CardShadowEffect"
+                      Color="#20000000"
+                      BlurRadius="10"
+                      ShadowDepth="2"
+                      Opacity="0.5"
+                      Direction="270"/>
+
+</ResourceDictionary>

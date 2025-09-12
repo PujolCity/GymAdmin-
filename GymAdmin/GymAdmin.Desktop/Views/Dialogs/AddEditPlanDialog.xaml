@@ -1,0 +1,101 @@
+﻿<UserControl x:Class="GymAdmin.Desktop.Views.Dialogs.AddEditPlanDialog"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DesignHeight="420" d:DesignWidth="700">
+
+    <Border Background="{StaticResource BackgroundWhiteBrush}"
+            CornerRadius="8" Padding="20"
+            BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
+            Effect="{StaticResource DialogShadowEffect}">
+
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Header -->
+            <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0 0 0 16">
+                <TextBlock Text="{Binding Titulo}" FontSize="18" FontWeight="Bold" />
+            </StackPanel>
+
+            <!-- Form -->
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="2*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Nombre -->
+                <StackPanel Grid.Row="0" Grid.ColumnSpan="2" Margin="0,0,12,0">
+                    <TextBlock Text="Nombre*" />
+                    <TextBox Text="{Binding Nombre, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
+                             Style="{StaticResource ValidatedTextBoxStyle}"/>
+                </StackPanel>
+
+                <!-- Créditos -->
+                <StackPanel Grid.Row="0" Grid.Column="2" Margin="0,0,12,0">
+                    <TextBlock Text="Créditos*" />
+                    <TextBox Text="{Binding Creditos, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
+                             Style="{StaticResource ValidatedTextBoxStyle}"/>
+                </StackPanel>
+
+                <!-- Duración -->
+                <StackPanel Grid.Row="0" Grid.Column="3">
+                    <TextBlock Text="Duración (días)*" />
+                    <TextBox Text="{Binding DuracionDias, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
+                             Style="{StaticResource ValidatedTextBoxStyle}"/>
+                </StackPanel>
+
+                <!-- Precio -->
+                <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,12,12,0">
+                    <TextBlock Text="Precio sugerido*" />
+                    <TextBox Text="{Binding PrecioSugerido, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
+                             Style="{StaticResource ValidatedTextBoxStyle}"/>
+                </StackPanel>
+
+                <!-- Activo -->
+                <StackPanel Grid.Row="1" Grid.Column="1" Margin="0,24,12,0" Orientation="Horizontal">
+                    <CheckBox IsChecked="{Binding Activo}" VerticalAlignment="Center"/>
+                    <TextBlock Text="Activo" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <!-- Descripción -->
+                <StackPanel Grid.Row="2" Grid.ColumnSpan="4" Margin="0,12,0,0">
+                    <TextBlock Text="Descripción" />
+                    <TextBox Text="{Binding Descripcion, UpdateSourceTrigger=PropertyChanged}"
+                             Style="{StaticResource FormTextBoxStyle}"
+                             AcceptsReturn="True" Height="120" TextWrapping="Wrap"/>
+                </StackPanel>
+
+                <!-- Errors -->
+                <TextBlock Grid.Row="3" Grid.ColumnSpan="4" Margin="0,8,0,0"
+                           Foreground="{StaticResource ErrorBrush}"
+                           Text="{Binding ErrorMessage}" />
+            </Grid>
+
+            <!-- Buttons -->
+            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
+                <Button Content="Cancelar" Width="100" Height="32"
+                        Style="{StaticResource SecondaryButtonStyle}"
+                        Command="{Binding CancelarCommand}"/>
+                <Button Content="Guardar" Width="100" Height="32" Margin="8,0,0,0"
+                        Style="{StaticResource PrimaryButtonStyle}"
+                        Command="{Binding GuardarCommand}"
+                        IsEnabled="{Binding FormularioValido}"/>
+            </StackPanel>
+        </Grid>
+    </Border>
+</UserControl>
