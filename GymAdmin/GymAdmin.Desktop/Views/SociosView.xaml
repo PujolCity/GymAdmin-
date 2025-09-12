@@ -3,14 +3,250 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:GymAdmin.Desktop.Views"
+             xmlns:viewmodels="clr-namespace:GymAdmin.Desktop.ViewModels.Socios"
+             xmlns:fa="http://schemas.awesome.incremented/wpf/xaml/fontawesome.sharp"
              mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800">
-    <DockPanel>
-        <TextBlock Text="Gestión de Miembros" FontSize="24" FontWeight="Bold" Margin="20"/>
+             Background="Transparent"
+             SnapsToDevicePixels="True"
+             UseLayoutRounding="True">
 
-        <!-- Aquí irá la lista de miembros y búsqueda -->
-        <TextBlock Text="Próximamente: Lista de miembros con búsqueda" 
-                   TextAlignment="Center" VerticalAlignment="Center" FontSize="16"/>
-    </DockPanel>
+    <Grid Margin="10">
+        <Grid HorizontalAlignment="Center" MaxWidth="1280" Width="Auto">
+
+            <Grid IsEnabled="{Binding IsDialogOpen, Converter={StaticResource InverseBoolConverter}}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <Border Grid.Row="0" Background="{StaticResource PrimaryBrush}" 
+                        Padding="15" CornerRadius="6" Margin="0 0 0 10">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <fa:IconImage Icon="Search"
+                          Foreground="{StaticResource TextInvertedBrush}"
+                          VerticalAlignment="Center"
+                          Width="18" Height="18"
+                          Margin="0 0 10 0"/>
+
+                        <Grid Grid.Column="1" VerticalAlignment="Center">
+                            <TextBox x:Name="SearchTextBox"
+                                     Tag="Buscar por DNI completo, nombre, apellido..."
+                                     Text="{Binding FiltroBusqueda, UpdateSourceTrigger=PropertyChanged}"
+                                     Style="{StaticResource SearchTextBoxStyle}"
+                                     MinWidth="240"/>
+                        </Grid>
+
+                        <Button Grid.Column="2"
+                                Style="{StaticResource ClearSearchButtonStyle}"
+                                Command="{Binding LimpiarFiltroCommand}"
+                                VerticalAlignment="Center"
+                                HorizontalAlignment="Center"
+                                Visibility="{Binding Text, ElementName=SearchTextBox, Converter={StaticResource EmptyStringToVisibilityConverter}, UpdateSourceTrigger=PropertyChanged}">
+                            <fa:IconImage Icon="Times" Width="14" Height="14" Foreground="{StaticResource TextInvertedBrush}"/>
+                        </Button>
+
+                        <ComboBox Grid.Column="3"
+                                  ItemsSource="{Binding StatusFilters}"
+                                  SelectedItem="{Binding SelectedStatusFilter}"
+                                  Style="{StaticResource FilterComboBoxStyle}"
+                                  Margin="15 0 0 0"
+                                  Width="150"/>
+
+                        <Button Grid.Column="4"
+                                Style="{StaticResource PrimaryButtonStyle}"
+                                Command="{Binding NuevoSocioCommand}"
+                                Margin="15 0 0 0"
+                                MinWidth="140" Height="36">
+                            <StackPanel Orientation="Horizontal">
+                                <fa:IconImage Icon="UserPlus" Margin="0 0 8 0" Width="16" Height="16"/>
+                                <TextBlock Text="Nuevo Socio" FontSize="14"/>
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+                </Border>
+
+                <TextBlock Grid.Row="1" Margin="0 0 0 10"
+                   Text="{Binding TotalCount, StringFormat='Socios encontrados: {0}'}"
+                   Foreground="{StaticResource TextSecondaryBrush}"
+                   FontSize="13" FontWeight="SemiBold"/>
+
+                <DataGrid Grid.Row="2"
+                  ItemsSource="{Binding Socios}"
+                  SelectedItem="{Binding SocioSeleccionado}"
+                  Sorting="DataGrid_Sorting"
+                  IsReadOnly="True"
+                  Style="{StaticResource BaseDataGridStyle}"
+                  HorizontalScrollBarVisibility="Auto"
+                  ScrollViewer.CanContentScroll="True">
+                    <DataGrid.Resources>
+                        <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+                            <Setter Property="VerticalAlignment" Value="Center"/>
+                            <Setter Property="HorizontalAlignment" Value="Center"/>
+                            <Setter Property="TextAlignment" Value="Center"/>
+                            <Setter Property="Padding" Value="8 6"/>
+                        </Style>
+                    </DataGrid.Resources>
+
+                    <DataGrid.Columns>
+                        <DataGridTemplateColumn Width="Auto" MinWidth="50" Header=" " IsReadOnly="True" SortMemberPath="Estado">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border Width="14" Height="14" CornerRadius="7"
+                                            Background="{Binding Estado, Converter={StaticResource StatusToBrushConverter}}"
+                                            HorizontalAlignment="Center" VerticalAlignment="Center">
+                                        <Border.ToolTip>
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding Estado}" FontWeight="Bold"/>
+                                                <TextBlock Text="{Binding VigenciaTexto}" />
+                                            </StackPanel>
+                                        </Border.ToolTip>
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <DataGridTextColumn Header="DNI"
+                                            Binding="{Binding Dni}"
+                                            Width="Auto"
+                                            MinWidth="110"
+                                            SortMemberPath="{x:Null}"
+                                            CanUserSort="False">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock" BasedOn="{StaticResource CenteredCellText}" />
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Header="APELLIDO y NOMBRE" 
+                                            Binding="{Binding NombreCompleto}" 
+                                            Width="Auto" MinWidth="260" SortMemberPath="NombreCompleto">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock" 
+                                       BasedOn="{StaticResource OnlyVerticalCenteredCellText}"/>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+
+                        <DataGridTextColumn Header="ESTADO" Binding="{Binding Estado}" 
+                                            Width="Auto" MinWidth="120">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+                                    <Setter Property="Foreground" Value="{Binding Estado, Converter={StaticResource StatusToColorConverter}}"/>
+                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                    <Setter Property="HorizontalAlignment" Value="Center"/>
+                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                    <Setter Property="ToolTip">
+                                        <Setter.Value>
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding VigenciaTexto}" />
+                                            </StackPanel>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+
+                        <DataGridTextColumn Header="ÚLTIMA ASISTENCIA" 
+                                            Binding="{Binding UltimaAsistencia, StringFormat={}{0:dd/MM/yyyy}}" 
+                                            Width="Auto" MinWidth="150" SortMemberPath="UltimaAsistencia">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock" BasedOn="{StaticResource CenteredCellText}" />
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+
+                        <!-- Acciones -->
+                        <DataGridTemplateColumn Width="Auto" MinWidth="180" Header="ACCIONES" IsReadOnly="True">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                        <Button Style="{StaticResource DataGridActionButtonStyle}"
+                                                Command="{Binding DataContext.RegistrarAsistenciaCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                CommandParameter="{Binding}" ToolTip="Registrar Asistencia">
+                                            <fa:IconImage Icon="CalendarCheck" Width="16" Height="16" Foreground="{StaticResource BackgroundPrimaryDarkBrush}"/>
+                                        </Button>
+                                        <Button Style="{StaticResource DataGridActionButtonStyle}"
+                                                Command="{Binding DataContext.RegistrarPagoCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                CommandParameter="{Binding}" ToolTip="Registrar pago">
+                                            <fa:IconImage Icon="CreditCard" Width="16" Height="16" Foreground="{StaticResource BackgroundPrimaryDarkBrush}"/>
+                                        </Button>
+                                        <Button Style="{StaticResource DataGridActionButtonStyle}"
+                                                Command="{Binding DataContext.EditarSocioCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                CommandParameter="{Binding}" ToolTip="Editar socio">
+                                            <fa:IconImage Icon="Edit" Width="16" Height="16" Foreground="{StaticResource BackgroundPrimaryDarkBrush}"/>
+                                        </Button>
+                                        <Button
+                                                Style="{StaticResource DataGridActionButtonStyle}"
+                                                Command="{Binding DataContext.EliminarSocioCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                CommandParameter="{Binding}"
+                                                ToolTip="Eliminar socio">
+                                            <fa:IconImage Icon="TrashAlt" Width="16" Height="16" Foreground="{StaticResource ErrorBrush}"/>
+                                        </Button>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+
+                <Border Grid.Row="3" Background="{StaticResource BackgroundLightBrush}" Padding="10" CornerRadius="4" Margin="0 10 0 0">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock VerticalAlignment="Center" Foreground="{StaticResource TextSecondaryBrush}">
+                              <Run Text="Mostrando "/>
+                              <Run Text="{Binding DisplayFrom, Mode=OneWay}"/>
+                              <Run Text=" – "/>
+                              <Run Text="{Binding DisplayTo, Mode=OneWay}"/>
+                              <Run Text=" de "/>
+                              <Run Text="{Binding TotalCount, Mode=OneWay}"/>
+                        </TextBlock>
+
+                        <WrapPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                            <ComboBox Width="90"
+                                      ItemsSource="{Binding PageSizes, Mode=OneWay}"
+                                      SelectedItem="{Binding PageSize}"
+                                      Style="{StaticResource FilterComboBoxStyle}"
+                                      ToolTip="Elementos por página" Height="32" Margin="0,0,6,0"/>
+
+                            <Button Content="⏮" Command="{Binding GoFirstPageCommand}" Width="36" Height="32" Margin="0,0,4,0"/>
+                            <Button Content="◀"  Command="{Binding GoPrevPageCommand}"  Width="36" Height="32" Margin="0,0,8,0"/>
+
+                            <TextBlock VerticalAlignment="Center" Margin="6,0">
+                                  <Run Text="Pág. "/>
+                                  <Run Text="{Binding PageNumber, Mode=OneWay}"/>
+                                  <Run Text=" / "/>
+                                  <Run Text="{Binding TotalPages, Mode=OneWay}"/>
+                            </TextBlock>
+
+                            <Button Content="▶"  Command="{Binding GoNextPageCommand}"  Width="36" Height="32" Margin="8,0,4,0"/>
+                            <Button Content="⏭" Command="{Binding GoLastPageCommand}"  Width="36" Height="32" Margin="0,0,10,0"/>
+                        </WrapPanel>
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <!-- Overlay de diálogo -->
+            <Grid x:Name="DialogOverlay"
+                  Visibility="{Binding IsDialogOpen, Converter={StaticResource BoolToVisibilityConverter}}"
+                  Background="#80000000"
+                  Panel.ZIndex="1000"
+                  HorizontalAlignment="Stretch"
+                  VerticalAlignment="Stretch"
+                  MouseDown="DialogOverlay_MouseDown">
+                <ContentControl Content="{Binding DialogContent}"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"/>
+            </Grid>
+        </Grid>
+    </Grid>
 </UserControl>

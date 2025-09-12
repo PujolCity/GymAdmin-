@@ -2,8 +2,8 @@
 
 public class Asistencia : EntityBase
 {
-    public int MiembroId { get; set; }
-    public Miembro Miembro { get; set; }
+    public int SocioId { get; set; }
+    public Socio Socio { get; set; }
     public DateTime Entrada { get; set; } = DateTime.UtcNow;
     public DateTime? Salida { get; set; }
 
@@ -11,13 +11,13 @@ public class Asistencia : EntityBase
     public string Observaciones { get; set; } = string.Empty;
 
     // Método para registrar asistencia
-    public static Asistencia RegistrarAsistencia(Miembro miembro, string observaciones = "")
+    public static Asistencia RegistrarAsistencia(Socio socio, string observaciones = "")
     {
         var asistencia = new Asistencia
         {
-            MiembroId = miembro.Id,
+            SocioId = socio.Id,
             Entrada = DateTime.UtcNow,
-            SeUsoCredito = miembro.UsarCredito(), // Intenta usar un crédito
+            SeUsoCredito = socio.UsarCredito(), // Intenta usar un crédito
             Observaciones = observaciones
         };
 

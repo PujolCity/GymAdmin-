@@ -5,20 +5,20 @@ namespace GymAdmin.Domain.Interfaces.Repositories;
 
 public interface IRepository<T> where T : EntityBase
 {
-    Task<T> GetByIdAsync(int id);
-    Task<IEnumerable<T>> GetAllAsync();
-    Task AddAsync(T entity);
+    Task<T> GetByIdAsync(int id, CancellationToken ct = default);
+    Task<IEnumerable<T>> GetAllAsync( CancellationToken ct = default);
+    Task AddAsync(T entity, CancellationToken ct = default);
     void Update(T entity);
     void Remove(T entity);
     void SoftDelete(T entity);
-    void SoftDelete(int id);
+    Task SoftDeleteAsync(int id, CancellationToken ct = default);
     void Restore(T entity);
-    void Restore(int id);
+    Task RestoreAsync(int id, CancellationToken ct = default);
 
     // Métodos de consulta
-    Task<bool> ExistsAsync(Expression<Func<T, bool>> predicate);
-    Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate);
-    Task<T> FirstOrDefaultAsync(Expression<Func<T, bool>> predicate);
+    Task<bool> ExistsAsync(Expression<Func<T, bool>> predicate, CancellationToken ct = default);
+    Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate, CancellationToken ct = default);
+    Task<T> FirstOrDefaultAsync(Expression<Func<T, bool>> predicate, CancellationToken ct = default);
 
     // Métodos con Includes
     IQueryable<T> Query(); // Para composición de queries

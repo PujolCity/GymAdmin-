@@ -1,22 +1,43 @@
-﻿using System.ComponentModel;
-using System.Runtime.CompilerServices;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 
 namespace GymAdmin.Desktop.ViewModels;
 
-public class ViewModelBase : INotifyPropertyChanged
+public abstract partial class ViewModelBase : ObservableObject
 {
-    public event PropertyChangedEventHandler PropertyChanged;
+    [ObservableProperty]
+    private bool isBusy;
 
-    protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+    [ObservableProperty]
+    private string? errorMessage;
+
+    public event Action? CloseRequested;
+    protected void RequestClose() => CloseRequested?.Invoke();
+
+    // Notificación de cambio de IsBusy para que los hijos puedan engancharse
+    public event Action<bool>? BusyChanged;
+
+    partial void OnIsBusyChanged(bool value)
     {
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        // dispara el hook virtual (si algún hijo lo overridea)
+        OnIsBusyChangedCore(value);
+
+        // notifica a todos los subscriptores (los que hicieron BindBusyToCommands)
+        BusyChanged?.Invoke(value);
     }
 
-    protected bool SetProperty<T>(ref T field, T value, [CallerMemberName] string propertyName = null)
+    protected virtual void OnIsBusyChangedCore(bool newValue) { }
+
+    /// <summary>
+    /// Ata IsBusy a uno o más IRelayCommand para disparar NotifyCanExecuteChanged automáticamente.
+    /// Llamalo en el constructor del VM hijo (después de inicializar los comandos).
+    /// </summary>
+    protected void BindBusyToCommands(params IRelayCommand[] commands)
     {
-        if (Equals(field, value)) return false;
-        field = value;
-        OnPropertyChanged(propertyName);
-        return true;
+        BusyChanged += _ =>
+        {
+            foreach (var cmd in commands)
+                cmd.NotifyCanExecuteChanged();
+        };
     }
 }
