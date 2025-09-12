@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GymAdmin.Infrastructure.Migrations
 {
     [DbContext(typeof(GymAdminDbContext))]
-    [Migration("20250821230819_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20250903033813_encriptadoDatosSensibles")]
+    partial class encriptadoDatosSensibles
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -38,9 +38,6 @@ namespace GymAdmin.Infrastructure.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("MiembroId")
-                        .HasColumnType("INTEGER");
-
                     b.Property<string>("Observaciones")
                         .IsRequired()
                         .HasMaxLength(500)
@@ -54,79 +51,17 @@ namespace GymAdmin.Infrastructure.Migrations
                         .HasColumnType("INTEGER")
                         .HasDefaultValue(false);
 
+                    b.Property<int>("SocioId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("MiembroId");
+                    b.HasIndex("SocioId");
 
                     b.ToTable("Asistencias");
-                });
-
-            modelBuilder.Entity("GymAdmin.Domain.Entities.Miembro", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Apellido")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("CreditosRestantes")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(0);
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Dni")
-                        .IsRequired()
-                        .HasMaxLength(8)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("ExpiracionMembresia")
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Nombre")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("RegistrationDate")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("TotalCreditosComprados")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(0);
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Dni")
-                        .IsUnique();
-
-                    b.HasIndex("Email")
-                        .IsUnique();
-
-                    b.ToTable("Miembros");
                 });
 
             modelBuilder.Entity("GymAdmin.Domain.Entities.Pago", b =>
@@ -135,9 +70,6 @@ namespace GymAdmin.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<decimal>("Amount")
-                        .HasColumnType("DECIMAL(10,2)");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
@@ -145,6 +77,9 @@ namespace GymAdmin.Infrastructure.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("FechaPago")
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("FechaVencimiento")
@@ -158,18 +93,18 @@ namespace GymAdmin.Infrastructure.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("MiembroId")
-                        .HasColumnType("INTEGER");
-
                     b.Property<string>("Observaciones")
                         .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTime>("PaymentDate")
-                        .HasColumnType("TEXT");
-
                     b.Property<int>("PlanMembresiaId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("Precio")
+                        .HasColumnType("DECIMAL(10,2)");
+
+                    b.Property<int>("SocioId")
                         .HasColumnType("INTEGER");
 
                     b.Property<DateTime?>("UpdatedAt")
@@ -177,9 +112,9 @@ namespace GymAdmin.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("MiembroId");
-
                     b.HasIndex("PlanMembresiaId");
+
+                    b.HasIndex("SocioId");
 
                     b.ToTable("Pagos");
                 });
@@ -196,9 +131,6 @@ namespace GymAdmin.Infrastructure.Migrations
                     b.Property<int>("Creditos")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("DaysPorSemana")
-                        .HasColumnType("INTEGER");
-
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("TEXT");
 
@@ -206,6 +138,9 @@ namespace GymAdmin.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("TEXT");
+
+                    b.Property<int>("DiasPorSemana")
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("DiasValidez")
                         .HasColumnType("INTEGER");
@@ -232,6 +167,62 @@ namespace GymAdmin.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("PlanesMembresia");
+                });
+
+            modelBuilder.Entity("GymAdmin.Domain.Entities.Socio", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Apellido")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("CreditosRestantes")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(0);
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DniEncrypted")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("ExpiracionMembresia")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("FechaRegistro")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("TotalCreditosComprados")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(0);
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DniEncrypted")
+                        .IsUnique();
+
+                    b.ToTable("Socios");
                 });
 
             modelBuilder.Entity("GymAdmin.Domain.Entities.SystemConfig", b =>
@@ -294,7 +285,7 @@ namespace GymAdmin.Infrastructure.Migrations
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Email")
+                    b.Property<string>("EmailEncrypted")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("TEXT");
@@ -330,7 +321,7 @@ namespace GymAdmin.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Email")
+                    b.HasIndex("EmailEncrypted")
                         .IsUnique();
 
                     b.HasIndex("Username")
@@ -341,39 +332,39 @@ namespace GymAdmin.Infrastructure.Migrations
 
             modelBuilder.Entity("GymAdmin.Domain.Entities.Asistencia", b =>
                 {
-                    b.HasOne("GymAdmin.Domain.Entities.Miembro", "Miembro")
-                        .WithMany("Attendances")
-                        .HasForeignKey("MiembroId")
+                    b.HasOne("GymAdmin.Domain.Entities.Socio", "Socio")
+                        .WithMany("Asistencias")
+                        .HasForeignKey("SocioId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Miembro");
+                    b.Navigation("Socio");
                 });
 
             modelBuilder.Entity("GymAdmin.Domain.Entities.Pago", b =>
                 {
-                    b.HasOne("GymAdmin.Domain.Entities.Miembro", "Miembro")
-                        .WithMany("Payments")
-                        .HasForeignKey("MiembroId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("GymAdmin.Domain.Entities.PlanMembresia", "PlanMembresia")
                         .WithMany()
                         .HasForeignKey("PlanMembresiaId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("Miembro");
+                    b.HasOne("GymAdmin.Domain.Entities.Socio", "Socio")
+                        .WithMany("Pagos")
+                        .HasForeignKey("SocioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("PlanMembresia");
+
+                    b.Navigation("Socio");
                 });
 
-            modelBuilder.Entity("GymAdmin.Domain.Entities.Miembro", b =>
+            modelBuilder.Entity("GymAdmin.Domain.Entities.Socio", b =>
                 {
-                    b.Navigation("Attendances");
+                    b.Navigation("Asistencias");
 
-                    b.Navigation("Payments");
+                    b.Navigation("Pagos");
                 });
 #pragma warning restore 612, 618
         }

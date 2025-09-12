@@ -8,9 +8,9 @@ public class UnitOfWork : IUnitOfWork
 {
     private readonly GymAdminDbContext _context;
 
-    public IRepository<Pago> PagosRepo { get; }
-    public IRepository<PlanMembresia> MembresiaRepo { get; } 
-    public IRepository<Miembro> MiembroRepo { get; }
+    public IRepository<Pagos> PagosRepo { get; }
+    public IRepository<PlanesMembresia> MembresiaRepo { get; } 
+    public ISocioRepository SocioRepo { get; }
     public IRepository<User> UserRepo { get; }
     public IRepository<Asistencia> AsistenciaRepo { get; }
     public IRepository<SystemConfig> SystemConfigRepo { get; }
@@ -19,24 +19,24 @@ public class UnitOfWork : IUnitOfWork
         IRepository<SystemConfig> systemConfigRepo,
         IRepository<Asistencia> asistenciaRepo,
         IRepository<User> userRepo,
-        IRepository<Miembro> miembroRepo,
-        IRepository<PlanMembresia> membresiaRepo,
-        IRepository<Pago> pagosRepo)
+        ISocioRepository socioRepo,
+        IRepository<PlanesMembresia> membresiaRepo,
+        IRepository<Pagos> pagosRepo)
     {
         _context = context;
         SystemConfigRepo = systemConfigRepo;
         AsistenciaRepo = asistenciaRepo;
         UserRepo = userRepo;
-        MiembroRepo = miembroRepo;
+        SocioRepo = socioRepo;
         MembresiaRepo = membresiaRepo;
         PagosRepo = pagosRepo;
     }
 
-    public async Task<int> CommitAsync()
+    public async Task<int> CommitAsync(CancellationToken ct = default)
     {
         try
         {
-            return await _context.SaveChangesAsync();
+            return await _context.SaveChangesAsync(ct);
         }
         catch (Exception ex)
         {

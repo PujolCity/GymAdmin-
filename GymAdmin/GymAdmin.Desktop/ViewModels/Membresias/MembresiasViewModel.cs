@@ -1,4 +1,4 @@
-﻿namespace GymAdmin.Desktop.ViewModels;
+﻿namespace GymAdmin.Desktop.ViewModels.Membresias;
 
 public class MembresiasViewModel : ViewModelBase
 {

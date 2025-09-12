@@ -2,6 +2,6 @@
 
 namespace GymAdmin.Domain.Interfaces.Repositories;
 
-public interface IPagoRepository : IRepository<Pago>
+public interface IPagoRepository : IRepository<Pagos>
 {
 }

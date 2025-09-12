@@ -1,14 +1,15 @@
 ﻿namespace GymAdmin.Domain.Entities;
 
-public class PlanMembresia : EntityBase
+public class PlanesMembresia : EntityBase
 {
+    public int Id { get; set; }
     public string Nombre { get; set; }
     public string Descripcion { get; set; }
     public decimal Precio { get; set; }
-    public int Creditos { get; set; }          // Cantidad de clases incluídas
-    public int DiasValidez { get; set; }       // Días de validez del plan
+    public int Creditos { get; set; }         
+    public int DiasValidez { get; set; }      
     public bool IsActive { get; set; } = true;
-    public int DaysPorSemana{ get; set; }      // Para planes de X días por semana
+    public int DiasPorSemana{ get; set; } 
 
     // Ejemplos:
     // - Plan 1 día: Credits=1, ValidityDays=1

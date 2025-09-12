@@ -19,7 +19,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\GymAdmin.Application\GymAdmin.Application.csproj" />
+		<ProjectReference Include="..\GymAdmin.Application\GymAdmin.Applications.csproj" />
 		<ProjectReference Include="..\GymAdmin.Infrastructure\GymAdmin.Infrastructure.csproj" />
 	</ItemGroup>
 
@@ -31,11 +31,7 @@
 
 	<ItemGroup>
 	  <Folder Include="DataDb\" />
-	  <Folder Include="Logs\" />
-	  <Folder Include="Converters\" />
 	  <Folder Include="Resources\Images\" />
-	  <Folder Include="Views\Dialogs\" />
-	  <Folder Include="Views\Partials\" />
 	</ItemGroup>
 
 </Project>

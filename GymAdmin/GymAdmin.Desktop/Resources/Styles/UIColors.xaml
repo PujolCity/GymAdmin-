@@ -30,7 +30,8 @@
     <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource AccentColor}" />
     <SolidColorBrush x:Key="PrimaryMidBrush" Color="{StaticResource PrimaryMidColor}" />
     <SolidColorBrush x:Key="PrimaryDarkBrush" Color="{StaticResource PrimaryDarkColor}" />
-
+    <SolidColorBrush x:Key="BackgroundWhiteBrush" Color="{StaticResource LightColor}"/>
+    
     <!-- Brushes de texto -->
     <SolidColorBrush x:Key="TextPrimaryBrush" Color="{StaticResource DarkColor}" />
     <SolidColorBrush x:Key="TextSecondaryBrush" Color="{StaticResource MidGrayColor}" />

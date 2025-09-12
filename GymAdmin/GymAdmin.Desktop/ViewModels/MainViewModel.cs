@@ -1,93 +1,72 @@
-﻿using FontAwesome.Sharp;
-using System.Windows.Input;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using FontAwesome.Sharp;
+using GymAdmin.Desktop.ViewModels.Membresias;
+using GymAdmin.Desktop.ViewModels.Socios;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace GymAdmin.Desktop.ViewModels;
 
-class MainViewModel : ViewModelBase
+public partial class MainViewModel : ViewModelBase
 {
-    private ViewModelBase _currentChildView;
-    private string _caption;
-    private IconChar _icon;
+    private readonly IServiceProvider _sp;
 
-    public ViewModelBase CurrentChildView
+    // Propiedades observables
+    [ObservableProperty] private ViewModelBase _currentChildView;
+    [ObservableProperty] private string _caption;
+    [ObservableProperty] private IconChar _icon;
+
+    public MainViewModel(IServiceProvider sp)
     {
-        get => _currentChildView;
-        set
-        {
-            _currentChildView = value;
-            OnPropertyChanged(nameof(CurrentChildView));
-        }
+        _sp = sp;
+        ShowInicioView();
     }
 
-    public string Caption
+    [RelayCommand]
+    private void ShowInicioView()
     {
-        get => _caption;
-        set
-        {
-            _caption = value;
-            OnPropertyChanged(nameof(Caption));
-        }
+        CurrentChildView = _sp.GetRequiredService<InicioViewModel>();
+        Caption = "Inicio";
+        Icon = IconChar.Home;
     }
 
-    public IconChar Icon
+    [RelayCommand]
+    private void ShowSociosView()
     {
-        get => _icon;
-        set
-        {
-            _icon = value;
-            OnPropertyChanged(nameof(Icon));
-        }
-    }
-
-    public ICommand ShowInicioViewCommand { get; }
-    public ICommand ShowSociosViewCommand { get; }
-    public ICommand ShowMembresiasViewCommand { get; }
-    public ICommand ShowPagosViewCommand { get; }
-    public ICommand ShowConfigViewCommand { get; }
-
-    public MainViewModel()
-    {
-        ShowInicioViewCommand = new RelayCommand(ExecuteShowInicioViewCommand);
-        ShowSociosViewCommand = new RelayCommand(ExecuteShowSociosViewCommand);
-        ShowMembresiasViewCommand = new RelayCommand(ExecuteShowMembresiasViewCommand);
-        ShowConfigViewCommand = new RelayCommand(ExecuteShowConfigViewCommand);
-        ShowPagosViewCommand = new RelayCommand(ExecuteShowPagosViewCommand);
-
-        ExecuteShowInicioViewCommand();
-    }
-
-    private void ExecuteShowPagosViewCommand()
-    {
-        CurrentChildView = new PagosViewModel();
-        Caption = "Pagos";
-        Icon = IconChar.CreditCard;
-    }
-
-    private void ExecuteShowConfigViewCommand()
-    {
-        CurrentChildView = new ConfigViewModel();
-        Caption = "Configuración";
-        Icon = IconChar.Cog;
-    }
-
-    private void ExecuteShowMembresiasViewCommand()
-    {
-        CurrentChildView = new MembresiasViewModel();
-        Caption = "Membresías";
-        Icon = IconChar.CalendarCheck;
-    }
-
-    private void ExecuteShowSociosViewCommand()
-    {
-        CurrentChildView = new SociosViewModel();
+        CurrentChildView = _sp.GetRequiredService<SociosViewModel>();
         Caption = "Socios";
         Icon = IconChar.UserCircle;
     }
 
-    private void ExecuteShowInicioViewCommand()
+    [RelayCommand]
+    private void ShowMembresiasView()
     {
-        CurrentChildView = new InicioViewModel();
-        Caption = "Inicio";
-        Icon = IconChar.Home;
+        CurrentChildView = _sp.GetRequiredService<MembresiasViewModel>();
+        Caption = "Membresías";
+        Icon = IconChar.CalendarCheck;
+    }
+
+    [RelayCommand]
+    private void ShowPagosView()
+    {
+        CurrentChildView = _sp.GetRequiredService<PagosViewModel>();
+        Caption = "Pagos";
+        Icon = IconChar.CreditCard;
+    }
+
+    [RelayCommand]
+    private void ShowConfigView()
+    {
+        CurrentChildView = _sp.GetRequiredService<ConfigViewModel>();
+        Caption = "Configuración";
+        Icon = IconChar.Cog;
+    }
+
+    [RelayCommand]
+    private void ShowPlanesView()
+    {
+        CurrentChildView = _sp.GetRequiredService<PlanesMembresiaViewModel>();
+        Caption = "Planes de Membresía";
+        Icon = IconChar.ListAlt;
     }
 }
