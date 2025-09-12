@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using GymAdmin.Desktop.ViewModels;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
@@ -10,9 +11,10 @@ namespace GymAdmin.Desktop;
 /// </summary>
 public partial class MainWindow : Window
 {
-    public MainWindow()
+    public MainWindow(MainViewModel vm)
     {
         InitializeComponent();
+        DataContext = vm;
     }
 
     [DllImport("user32.dll")]
@@ -43,5 +45,10 @@ public partial class MainWindow : Window
     private void btnMinimize_Click(object sender, RoutedEventArgs e)
     {
         this.WindowState = WindowState.Minimized;
+    }
+
+    private void RadioButton_Checked(object sender, RoutedEventArgs e)
+    {
+
     }
 }

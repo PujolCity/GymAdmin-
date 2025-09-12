@@ -4,13 +4,13 @@ namespace GymAdmin.Domain.Interfaces.Repositories;
 
 public interface IUnitOfWork : IDisposable
 {
-    IRepository<Pago> PagosRepo { get; }
-    IRepository<PlanMembresia> MembresiaRepo { get; }
-    IRepository<Miembro> MiembroRepo { get; }
+    IRepository<Pagos> PagosRepo { get; }
+    IRepository<PlanesMembresia> MembresiaRepo { get; }
+    ISocioRepository SocioRepo { get; }
     IRepository<User> UserRepo { get; }
     IRepository<Asistencia> AsistenciaRepo { get; }
     IRepository<SystemConfig> SystemConfigRepo { get; }
 
-    Task<int> CommitAsync();
+    Task<int> CommitAsync(CancellationToken ct = default);
     void Rollback();
 }

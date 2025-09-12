@@ -31,7 +31,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\GymAdmin.Application\GymAdmin.Application.csproj" />
+		<ProjectReference Include="..\GymAdmin.Application\GymAdmin.Applications.csproj" />
+		<ProjectReference Include="..\GymAdmin.Domain\GymAdmin.Domain.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

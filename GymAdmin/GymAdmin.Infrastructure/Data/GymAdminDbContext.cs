@@ -1,19 +1,27 @@
 ﻿using GymAdmin.Domain.Entities;
+using GymAdmin.Domain.Interfaces.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace GymAdmin.Infrastructure.Data;
 
+// COMANDO PARA MIGRACIONES EN CONSOLA DE GESTIÓN DE PAQUETES:
+// Add-Migration ExpiracionNulleable -Project GymAdmin.Infrastructure -StartupProject GymAdmin.Desktop
+
 public class GymAdminDbContext : DbContext
 {
-    public GymAdminDbContext(DbContextOptions<GymAdminDbContext> options)
+    public ICryptoService _cryptoService;
+
+    public GymAdminDbContext(DbContextOptions<GymAdminDbContext> options, 
+        ICryptoService cryptoService)
            : base(options)
     {
+        _cryptoService = cryptoService;
     }
 
     // DbSets
-    public DbSet<Miembro> Miembros { get; set; }
-    public DbSet<PlanMembresia> PlanesMembresia { get; set; }
-    public DbSet<Pago> Pagos { get; set; }
+    public DbSet<Socio> Socios { get; set; }
+    public DbSet<PlanesMembresia> PlanesMembresia { get; set; }
+    public DbSet<Pagos> Pagos { get; set; }
     public DbSet<Asistencia> Asistencias { get; set; }
     public DbSet<SystemConfig> SystemConfigs { get; set; }
     public DbSet<User> Users { get; set; }
@@ -22,15 +30,12 @@ public class GymAdminDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        // Configuración de Miembro
-        modelBuilder.Entity<Miembro>(entity =>
+        // Configuración de Socio
+        modelBuilder.Entity<Socio>(entity =>
         {
             entity.HasQueryFilter(m => !m.IsDeleted);
             entity.HasKey(m => m.Id);
 
-            entity.Property(m => m.Dni)
-                .IsRequired()
-                .HasMaxLength(8);
 
             entity.Property(m => m.Nombre)
                 .IsRequired()
@@ -40,10 +45,9 @@ public class GymAdminDbContext : DbContext
                 .IsRequired()
                 .HasMaxLength(50);
 
-            entity.Property(m => m.Email)
-                .HasMaxLength(100);
-
-            entity.Property(m => m.RegistrationDate)
+            entity.Property(e => e.DniEncrypted).IsRequired();
+            
+            entity.Property(m => m.FechaRegistro)
                 .IsRequired();
 
             entity.Property(m => m.CreditosRestantes)
@@ -56,26 +60,23 @@ public class GymAdminDbContext : DbContext
                 .IsRequired();
 
             // Índices únicos
-            entity.HasIndex(m => m.Dni)
-                .IsUnique();
-
-            entity.HasIndex(m => m.Email)
+            entity.HasIndex(m => m.DniEncrypted)
                 .IsUnique();
 
             // Relaciones
-            entity.HasMany(m => m.Payments)
-                .WithOne(p => p.Miembro)
-                .HasForeignKey(p => p.MiembroId)
+            entity.HasMany(m => m.Pagos)
+                .WithOne(p => p.Socio)
+                .HasForeignKey(p => p.SocioId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            entity.HasMany(m => m.Attendances)
-                .WithOne(a => a.Miembro)
-                .HasForeignKey(a => a.MiembroId)
+            entity.HasMany(m => m.Asistencias)
+                .WithOne(a => a.Socio)
+                .HasForeignKey(a => a.SocioId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
 
         // Configuración de PlanMembresia
-        modelBuilder.Entity<PlanMembresia>(entity =>
+        modelBuilder.Entity<PlanesMembresia>(entity =>
         {
             entity.HasQueryFilter(pm => !pm.IsDeleted);
             entity.HasKey(pm => pm.Id);
@@ -97,7 +98,7 @@ public class GymAdminDbContext : DbContext
             entity.Property(pm => pm.DiasValidez)
                 .IsRequired();
 
-            entity.Property(pm => pm.DaysPorSemana)
+            entity.Property(pm => pm.DiasPorSemana)
                 .IsRequired();
 
             entity.Property(pm => pm.IsActive)
@@ -105,16 +106,16 @@ public class GymAdminDbContext : DbContext
         });
 
         // Configuración de Pago
-        modelBuilder.Entity<Pago>(entity =>
+        modelBuilder.Entity<Pagos>(entity =>
         {
             entity.HasQueryFilter(p => !p.IsDeleted);
             entity.HasKey(p => p.Id);
 
-            entity.Property(p => p.Amount)
+            entity.Property(p => p.Precio)
                 .IsRequired()
                 .HasColumnType("DECIMAL(10,2)");
 
-            entity.Property(p => p.PaymentDate)
+            entity.Property(p => p.FechaPago)
                 .IsRequired();
 
             entity.Property(p => p.MetodoPago)
@@ -131,9 +132,9 @@ public class GymAdminDbContext : DbContext
                 .IsRequired();
 
             // Relaciones
-            entity.HasOne(p => p.Miembro)
-                .WithMany(m => m.Payments)
-                .HasForeignKey(p => p.MiembroId)
+            entity.HasOne(p => p.Socio)
+                .WithMany(m => m.Pagos)
+                .HasForeignKey(p => p.SocioId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasOne(p => p.PlanMembresia)
@@ -159,9 +160,9 @@ public class GymAdminDbContext : DbContext
                 .HasMaxLength(500);
 
             // Relaciones
-            entity.HasOne(a => a.Miembro)
-                .WithMany(m => m.Attendances)
-                .HasForeignKey(a => a.MiembroId)
+            entity.HasOne(a => a.Socio)
+                .WithMany(m => m.Asistencias)
+                .HasForeignKey(a => a.SocioId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
 
@@ -201,7 +202,7 @@ public class GymAdminDbContext : DbContext
                 .IsRequired()
                 .HasMaxLength(255);
 
-            entity.Property(u => u.Email)
+            entity.Property(u => u.EmailEncrypted)
                 .HasMaxLength(100);
 
             entity.Property(u => u.FullName)
@@ -214,7 +215,7 @@ public class GymAdminDbContext : DbContext
             entity.HasIndex(u => u.Username)
                 .IsUnique();
 
-            entity.HasIndex(u => u.Email)
+            entity.HasIndex(u => u.EmailEncrypted)
                 .IsUnique();
         });
     }
@@ -222,12 +223,16 @@ public class GymAdminDbContext : DbContext
     public override int SaveChanges()
     {
         UpdateTimestamps();
+        HandleEncryption();
+
         return base.SaveChanges();
     }
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         UpdateTimestamps();
+        HandleEncryption();
+
         return await base.SaveChangesAsync(cancellationToken);
     }
 
@@ -248,6 +253,17 @@ public class GymAdminDbContext : DbContext
             else
             {
                 entity.MarkAsUpdated();
+            }
+        }
+    }
+
+    private void HandleEncryption()
+    {
+        foreach (var entry in ChangeTracker.Entries<IEncryptableEntity>())
+        {
+            if (entry.State == EntityState.Added || entry.State == EntityState.Modified)
+            {
+                entry.Entity.HandleEncryption(_cryptoService);
             }
         }
     }

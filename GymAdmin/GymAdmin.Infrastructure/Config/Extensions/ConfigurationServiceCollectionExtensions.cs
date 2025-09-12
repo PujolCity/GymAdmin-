@@ -1,8 +1,12 @@
-﻿using GymAdmin.Domain.Interfaces.Repositories;
+﻿using GymAdmin.Applications.Interactor.PlanesMembresia;
+using GymAdmin.Applications.Interactor.SociosInteractors;
+using GymAdmin.Domain.Interfaces.Repositories;
+using GymAdmin.Domain.Interfaces.Services;
 using GymAdmin.Infrastructure.Config.InitializationExtensions;
 using GymAdmin.Infrastructure.Config.Options;
 using GymAdmin.Infrastructure.Data;
 using GymAdmin.Infrastructure.Data.Repositories;
+using GymAdmin.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,6 +23,37 @@ public static class ConfigurationServiceCollectionExtensions
         services.AddLoggingConfiguration(configuration);
         services.AddDatabaseConfiguration(configuration);
         services.AddRepositories();
+        services.AddServices();
+        services.AddInteractors();
+
+        // Servicio Encriptado
+        services.AddSingleton<ICryptoService>(sp =>
+        {
+            var cryptoService = new AesCryptoService(); // Archivo local donde se guarda/lee el secret
+            return cryptoService;
+        });
+
+        return services;
+    }
+
+    private static IServiceCollection AddInteractors(this IServiceCollection services)
+    {
+        services.AddTransient<ISocioCreateInteractor, SocioCreateInteractor>();
+        services.AddTransient<IGetAllSociosInteractor, GetAllSociosInteractor>();
+        services.AddTransient<IDeleteSocioInteractor, DeleteSocioInteractor>();
+
+        services.AddTransient<IGetPlanesMembresiaInteractor, GetPlanesMembresiaInteractor>();
+        services.AddTransient<ICreateOrUpdatePlanInteractor, CreateOrUpdatePlanInteractor>();
+        services.AddTransient<IDeletePlanMembresiaInteractor, DeletePlanMembresiaInteractor>();
+
+        return services;
+    }
+
+
+    private static IServiceCollection AddServices(this IServiceCollection services)
+    {
+        services.AddTransient<ISocioService, SocioService>();
+        services.AddTransient<IPlanMembresiaService, PlanMembresiaService>();
 
         return services;
     }
@@ -27,6 +62,7 @@ public static class ConfigurationServiceCollectionExtensions
     {
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+        services.AddScoped<ISocioRepository, SocioRepository>();
 
         return services;
     }
@@ -35,8 +71,13 @@ public static class ConfigurationServiceCollectionExtensions
     {
         var serilogConfig = configuration.GetOptions<SerilogConfig>("SerilogConfig");
 
+        var logFolder = Path.GetDirectoryName(serilogConfig.LogFilePath);
+        if (!Directory.Exists(logFolder))
+            Directory.CreateDirectory(logFolder);
+
         Log.Logger = new LoggerConfiguration()
          .MinimumLevel.Is(Enum.Parse<LogEventLevel>(serilogConfig.MinimumLevel))
+         .WriteTo.Debug()
          .WriteTo.Console(outputTemplate: serilogConfig.ConsoleOutputTemplate)
          .WriteTo.File(
              path: serilogConfig.LogFilePath,

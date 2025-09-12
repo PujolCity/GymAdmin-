@@ -3,26 +3,45 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:GymAdmin.Desktop"
-        xmlns:viewModels="clr-namespace:GymAdmin.Desktop.ViewModels"
+        xmlns:local="clr-namespace:GymAdmin.Desktop.Views"
         xmlns:fa="http://schemas.awesome.incremented/wpf/xaml/fontawesome.sharp"
         mc:Ignorable="d"
-        Title="GymAdmin - Sistema de Gestión para Gimnasios" 
+        Title="GymAdmin - Sistema de Gestión para Gimnasios"
         Height="700" Width="1200"
         WindowStartupLocation="CenterScreen"
         MinHeight="600" MinWidth="1000"
         WindowStyle="None"
         Background="Transparent"
-        AllowsTransparency="True">
-
-    <Window.DataContext>
-        <viewModels:InicioViewModel/>
-    </Window.DataContext>
+        AllowsTransparency="True"  
+        xmlns:views="clr-namespace:GymAdmin.Desktop.Views"
+        xmlns:viewModels="clr-namespace:GymAdmin.Desktop.ViewModels"
+        xmlns:sociosVM="clr-namespace:GymAdmin.Desktop.ViewModels.Socios"
+        xmlns:membresiasVM="clr-namespace:GymAdmin.Desktop.ViewModels.Membresias">
 
     <Window.Resources>
-        <Style TargetType="TextBlock">
-            <Setter Property="Foreground" Value="#FF333333"/>
-        </Style>
+        <DataTemplate DataType="{x:Type viewModels:InicioViewModel}">
+            <views:InicioView/>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type sociosVM:SociosViewModel}">
+            <views:SociosView/>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type membresiasVM:MembresiasViewModel}">
+            <views:MembresiasView/>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type viewModels:PagosViewModel}">
+            <views:PagosView/>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type viewModels:ConfigViewModel}">
+            <views:ConfiguracionView/>
+        </DataTemplate>
+        
+        <DataTemplate DataType="{x:Type membresiasVM:PlanesMembresiaViewModel}">
+            <views:PlanesMembresiaView/>
+        </DataTemplate>
     </Window.Resources>
 
     <Border CornerRadius="10" 
@@ -68,7 +87,9 @@
                     </StackPanel>
                     <!--Menu Butons-->
                     <RadioButton Style="{StaticResource menuButton}"
-                                 Tag="{StaticResource TextInvertedBrush}">
+                                 Tag="{StaticResource TextInvertedBrush}"
+                                 Command="{Binding ShowInicioViewCommand}"
+                                 IsChecked="True">
                         <StackPanel Orientation="Horizontal">
                             <fa:IconImage Icon="Home" Style="{StaticResource menuButtonIcon}" />
                             <TextBlock Text="Inicio" Style="{StaticResource menuButtonText}"/>
@@ -76,7 +97,8 @@
                     </RadioButton>
 
                     <RadioButton Style="{StaticResource menuButton}"
-                                 Tag="{StaticResource TextInvertedBrush}">
+                                 Tag="{StaticResource TextInvertedBrush}"
+                                 Command="{Binding ShowSociosViewCommand}">
                         <StackPanel Orientation="Horizontal">
                             <fa:IconImage Icon="UserCircle" Style="{StaticResource menuButtonIcon}" />
                             <TextBlock Text="Socios" Style="{StaticResource menuButtonText}"/>
@@ -84,7 +106,8 @@
                     </RadioButton>
 
                     <RadioButton Style="{StaticResource menuButton}"
-                                 Tag="{StaticResource TextInvertedBrush}">
+                                 Tag="{StaticResource TextInvertedBrush}"
+                                 Command="{Binding ShowPagosViewCommand}">
                         <StackPanel Orientation="Horizontal">
                             <fa:IconImage Icon="CreditCard" Style="{StaticResource menuButtonIcon}" />
                             <TextBlock Text="Pagos" Style="{StaticResource menuButtonText}"/>
@@ -92,7 +115,8 @@
                     </RadioButton>
 
                     <RadioButton Style="{StaticResource menuButton}"
-                                 Tag="{StaticResource TextInvertedBrush}">
+                                 Tag="{StaticResource TextInvertedBrush}"
+                                 Command="{Binding ShowMembresiasViewCommand}">
                         <StackPanel Orientation="Horizontal">
                             <fa:IconImage Icon="CalendarCheck" Style="{StaticResource menuButtonIcon}" />
                             <TextBlock Text="Membresías" Style="{StaticResource menuButtonText}"/>
@@ -100,9 +124,19 @@
                     </RadioButton>
 
                     <RadioButton Style="{StaticResource menuButton}"
-                                 Tag="{StaticResource TextInvertedBrush}">
+                                 Tag="{StaticResource TextInvertedBrush}"
+                                 Command="{Binding ShowPlanesViewCommand}">
                         <StackPanel Orientation="Horizontal">
-                            <fa:IconImage Icon="Tools" Style="{StaticResource menuButtonIcon}" />
+                            <fa:IconImage Icon="ListAlt" Style="{StaticResource menuButtonIcon}" />
+                            <TextBlock Text="Planes" Style="{StaticResource menuButtonText}"/>
+                        </StackPanel>
+                    </RadioButton>
+
+                    <RadioButton Style="{StaticResource menuButton}"
+                                 Tag="{StaticResource TextInvertedBrush}"
+                                 Command="{Binding ShowConfigViewCommand}">
+                        <StackPanel Orientation="Horizontal">
+                            <fa:IconImage Icon="Cog" Style="{StaticResource menuButtonIcon}" />
                             <TextBlock Text="Configuración" Style="{StaticResource menuButtonText}"/>
                         </StackPanel>
                     </RadioButton>
@@ -145,13 +179,13 @@
                             <fa:IconImage Icon="Xmark" 
                                           Style="{StaticResource barButtonIcon}"/>
                         </Button>
-                        <Button x:Name="btnMaximize"
+                        <!--<Button x:Name="btnMaximize"
                                 Style="{StaticResource barButton}"
                                 Tag="{StaticResource TextInvertedBrush}"
                                 Click="btnMaximize_Click">
                             <fa:IconImage Icon="WindowMaximize" 
                                             Style="{StaticResource barButtonIcon}"/>
-                        </Button>
+                        </Button>-->
                         <Button x:Name="btnMinimize"
                                 Style="{StaticResource barButton}"
                                 Tag="{StaticResource TextInvertedBrush}"
@@ -166,43 +200,30 @@
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition>
                             </ColumnDefinition>
-                            <ColumnDefinition>
-                            </ColumnDefinition>
                         </Grid.ColumnDefinitions>
 
                         <!--Captions-->
-                        <StackPanel Grid.Column="0"
+                        <StackPanel
                                     Orientation="Horizontal"
                                     VerticalAlignment="Center">
-                            <fa:IconImage Icon="Home"
+                            <fa:IconImage Icon="{Binding Icon}"
                                           Height="20"
                                           Width="20"
                                           Foreground="{StaticResource BackgroundPrimaryMidBrush}"
                                           Margin="35,0,10,0"/>
-                            <TextBlock Text="Inicio"
+                            <TextBlock Text="{Binding Caption}"
                                        Foreground="{StaticResource BackgroundPrimaryMidBrush}"
                                        FontSize="16"
                                        FontWeight="Medium"
                                        VerticalAlignment="Center"></TextBlock>
                         </StackPanel>
-
-                        <!--User Options-->
-                        <!--<StackPanel Grid.Column="1"
-                                    Orientation="Horizontal"
-                                    FlowDirection="RightToLeft"
-                                    VerticalAlignment="Center"
-                                    Margin="0,0,10,0">
-                            <Button Style="{StaticResource iconButton}"
-                                    Tag="{StaticResource BackgroundPrimaryMidBrush}">
-                                <fa:IconImage Icon="AngleDown" Style="{StaticResource iconButtonIcon}"/>
-                            </Button>
-                            <TextBlock></TextBlock>
-                        </StackPanel>-->
                     </Grid>
-                    
+
                     <!--CONTENIDO-->
-                    <ContentControl Grid.Row="2"
-                                    Margin="25"/>
+                    <Grid Grid.Row="2"
+                          Margin="10">
+                        <ContentControl Content="{Binding CurrentChildView}"/>
+                    </Grid>
                 </Grid>
             </Border>
         </Grid>

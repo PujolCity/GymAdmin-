@@ -1,8 +1,11 @@
-﻿using GymAdmin.Desktop.ConfigStartup;
+﻿using GymAdmin.Applications.AppModule;
+using GymAdmin.Desktop.ConfigStartup;
 using GymAdmin.Infrastructure.Config.Extensions;
 using GymAdmin.Infrastructure.Data;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Serilog;
 using System.IO;
 using System.Windows;
 
@@ -11,59 +14,49 @@ namespace GymAdmin.Desktop;
 /// <summary>
 /// Interaction logic for App.xaml
 /// </summary>
-public partial class App : System.Windows.Application
+public partial class App : Application
 {
-    public static IServiceProvider? ServiceProvider { get; private set; }
-    public static IConfiguration? Configuration { get; private set; }
+    private IHost _host;
 
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
-        RunStartupAsync().GetAwaiter().GetResult();
-    }
 
-    private async Task RunStartupAsync()
-    {
-        try
-        {
-            var builder = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
-
-            Configuration = builder.Build();
-
-            var services = new ServiceCollection();
-
-            services.AddSingleton(Configuration);
-
-            services.ConfigureDesktopInfrastructure(Configuration);
-            services.ConfigureUIDesktop(Configuration);
-
-            ServiceProvider = services.BuildServiceProvider();
-
-            using (var scope = ServiceProvider.CreateScope())
+        _host = Host.CreateDefaultBuilder() // appsettings.json, logging, env, etc.
+            .ConfigureAppConfiguration(cfg =>
             {
-                var initializer = scope.ServiceProvider.GetRequiredService<DatabaseInitializer>();
-                await initializer.InitializeAsync();
-            }
+                cfg.SetBasePath(Directory.GetCurrentDirectory());
+                cfg.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+            })
+            .ConfigureServices((ctx, services) =>
+            {
+                services.ConfigureDesktopInfrastructure(ctx.Configuration);
+                services.AddUserValidators();
+                services.ConfigureUIDesktop(ctx.Configuration);
+                services.AddTransient<MainWindow>();
+            })
+            .UseSerilog()
+            .Build();
 
-            var mainWindow = ServiceProvider.GetRequiredService<MainWindow>();
-            mainWindow.Show();
-        }
-        catch (Exception ex)
+        // Inicializar DB si aplica (migraciones/seed)
+        using (var scope = _host.Services.CreateScope())
         {
-            MessageBox.Show($"Error al iniciar la aplicación: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            Shutdown(1);
+            var initializer = scope.ServiceProvider.GetRequiredService<DatabaseInitializer>();
+            initializer.InitializeAsync().GetAwaiter().GetResult();
         }
+
+        // Mostrar ventana principal
+        var mainWindow = _host.Services.GetRequiredService<MainWindow>();
+        mainWindow.Show();
     }
 
-    protected override void OnExit(ExitEventArgs e)
+    protected override async void OnExit(ExitEventArgs e)
     {
-        if (ServiceProvider is IDisposable disposable)
+        if (_host != null)
         {
-            disposable.Dispose();
+            await _host.StopAsync();
+            _host.Dispose();
         }
-
         base.OnExit(e);
     }
 }
