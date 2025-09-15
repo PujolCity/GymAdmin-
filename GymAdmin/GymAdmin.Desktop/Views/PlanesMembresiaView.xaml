@@ -58,10 +58,16 @@
                               Margin="15 0 0 0"
                               Width="150"/>
 
-                    <Button Grid.Column="4" Margin="12,0,0,0" MinWidth="140" Height="36"
-                            Content="Nuevo plan"
-                            Command="{Binding NuevoPlanCommand}"
-                            Style="{StaticResource PrimaryButtonStyle}"/>
+                    <Button Grid.Column="4" 
+                            Margin="12,0,0,0" 
+                            MinWidth="100" Height="36"
+                            Command="{Binding NuevoPlanCommand}"    
+                            Style="{StaticResource PrimaryButtonStyle}">
+                        <StackPanel Orientation="Horizontal">
+                            <fa:IconImage Icon="Plus" Margin="0 0 8 0" Width="16" Height="16"/>
+                            <TextBlock Text="Nuevo Plan" FontSize="14"/>
+                        </StackPanel>
+                    </Button>
                 </Grid>
             </Border>
 
@@ -90,6 +96,22 @@
                 </DataGrid.Resources>
 
                 <DataGrid.Columns>
+                    <DataGridTemplateColumn Width="Auto" MinWidth="50" Header=" " IsReadOnly="True" SortMemberPath="Estado">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Border Width="14" Height="14" CornerRadius="7"
+                                        Background="{Binding Estado, Converter={StaticResource StatusToBrushConverter}}"
+                                        HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <Border.ToolTip>
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding Estado}" FontWeight="Bold"/>
+                                        </StackPanel>
+                                    </Border.ToolTip>
+                                </Border>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    
                     <DataGridTextColumn Header="NOMBRE" Binding="{Binding Nombre}" Width="2*" SortMemberPath="Nombre">
                         <DataGridTextColumn.ElementStyle>
                             <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
@@ -99,10 +121,43 @@
                         </DataGridTextColumn.ElementStyle>
                     </DataGridTextColumn>
 
-                    <DataGridTextColumn Header="CRÉDITOS" Binding="{Binding Creditos}" Width="*" SortMemberPath="Creditos"/>
-                    <DataGridTextColumn Header="DÍAS VIGENCIA" Binding="{Binding DiasValidez}" Width="*" SortMemberPath="DuracionDias"/>
-                    <DataGridTextColumn Header="PRECIO" Binding="{Binding Precio, StringFormat={}{0:C}}" Width="*" SortMemberPath="PrecioSugerido"/>
+                    <DataGridTextColumn Header="CRÉDITOS"
+                                        Binding="{Binding Creditos}"
+                                        Width="*"
+                                        SortMemberPath="Creditos">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+                                <Setter Property="HorizontalAlignment" Value="Center"/>
+                                <Setter Property="VerticalAlignment"   Value="Center"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
 
+                    <!-- DÍAS VIGENCIA -->
+                    <DataGridTextColumn Header="DÍAS VIGENCIA"
+                                        Binding="{Binding DiasValidez}"
+                                        Width="*"
+                                        SortMemberPath="DiasValidez">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+                                <Setter Property="HorizontalAlignment" Value="Center"/>
+                                <Setter Property="VerticalAlignment"   Value="Center"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+
+                    <!-- PRECIO -->
+                    <DataGridTextColumn Header="PRECIO"
+                                        Binding="{Binding Precio, StringFormat={}{0:C}}"
+                                        Width="*"
+                                        SortMemberPath="Precio">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+                                <Setter Property="HorizontalAlignment" Value="Center"/>
+                                <Setter Property="VerticalAlignment"   Value="Center"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
 
                     <DataGridTextColumn Header="ESTADO" Binding="{Binding Estado}" 
                     Width="Auto" MinWidth="120">

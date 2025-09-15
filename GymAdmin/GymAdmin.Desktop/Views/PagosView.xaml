@@ -3,10 +3,166 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:GymAdmin.Desktop.Views"
+             xmlns:fa="http://schemas.awesome.incremented/wpf/xaml/fontawesome.sharp"
+             xmlns:viewmodels="clr-namespace:GymAdmin.Desktop.ViewModels.Pagos"
              mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800">
-    <Grid>
-            
+             Background="Transparent"
+             SnapsToDevicePixels="True"
+             UseLayoutRounding="True">
+
+    <Grid Margin="10">
+        <Grid IsEnabled="{Binding IsDialogOpen, Converter={StaticResource InverseBoolConverter}}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Toolbar / Filtros -->
+            <Border Grid.Row="0" Background="{StaticResource PrimaryBrush}" 
+                    Padding="15" 
+                    CornerRadius="6" Margin="0 0 0 10">
+                <!-- Toolbar “elástica” -->
+                <WrapPanel Orientation="Horizontal" VerticalAlignment="Center" ItemHeight="36">
+                    <!-- Lupa -->
+                    <fa:IconImage Icon="Search"
+                                  Foreground="{StaticResource TextInvertedBrush}"
+                                  VerticalAlignment="Center"
+                                  Width="18" Height="18"
+                                  Margin="0,0,10,0"/>
+
+                    <!-- Búsqueda (con botón limpiar superpuesto) -->
+                    <Grid MinWidth="160" MaxWidth="260" Width="160" Margin="0,0,8,0" VerticalAlignment="Center">
+                        <TextBox x:Name="SearchTextBox"
+                                 Tag="Buscar por socio…"
+                                 Text="{Binding TextoFiltro, UpdateSourceTrigger=PropertyChanged}"
+                                 Style="{StaticResource SearchTextBoxStyle}"
+                                 Height="36" />
+                    </Grid>
+                    <Button 
+                           Style="{StaticResource ClearSearchButtonStyle}"
+                           Command="{Binding LimpiarFiltroCommand}"
+                           HorizontalAlignment="Right"
+                           VerticalAlignment="Center"
+                           Margin="0,0,6,0"
+                           Visibility="{Binding Text, ElementName=SearchTextBox,
+                                         Converter={StaticResource EmptyStringToVisibilityConverter},
+                                         UpdateSourceTrigger=PropertyChanged}">
+                        <fa:IconImage Icon="Times" Width="14" Height="14" Foreground="{StaticResource TextInvertedBrush}"/>
+                    </Button>
+
+                    <DatePicker SelectedDate="{Binding FechaDesde}"
+                                Style="{StaticResource FilterDatePickerStyle}"
+                                Width="130"
+                                Margin="8,0,0,0"/>
+
+                    <DatePicker SelectedDate="{Binding FechaHasta}"
+                                Style="{StaticResource FilterDatePickerStyle}"
+                                Width="130"
+                                Margin="8,0,0,0"/>
+
+                    <ComboBox ItemsSource="{Binding Estados}"
+                              SelectedItem="{Binding EstadoSeleccionado}"
+                              Style="{StaticResource FilterComboBoxStyle}"
+                              Width="100"
+                              Margin="8,0,0,0"/>
+
+                    <Border Width="0" Margin="0" />
+
+                    <Button Margin="12,0,0,0"
+                            MinWidth="100" Height="36"
+                            Command="{Binding NuevoPagoCommand}"
+                            Style="{StaticResource PrimaryButtonStyle}">
+                        <StackPanel Orientation="Horizontal">
+                            <fa:IconImage Icon="MoneyBill" Margin="0 0 8 0" Width="16" Height="16"/>
+                            <TextBlock Text="Nuevo Pago" FontSize="14"/>
+                        </StackPanel>
+                    </Button>
+                </WrapPanel>
+            </Border>
+
+            <!-- DataGrid -->
+            <DataGrid Grid.Row="1" ItemsSource="{Binding Pagos}" SelectedItem="{Binding PagoSeleccionado}"
+                AutoGenerateColumns="False" IsReadOnly="True" Style="{StaticResource BaseDataGridStyle}">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="FECHA" Binding="{Binding FechaPago, StringFormat={}{0:dd/MM/yyyy HH:mm}}" Width="*" />
+                    <DataGridTextColumn Header="SOCIO" Binding="{Binding SocioNombre}" Width="2*" />
+                    <DataGridTextColumn Header="PLAN" Binding="{Binding PlanNombre}" Width="*" />
+                    <DataGridTextColumn Header="MÉTODO" Binding="{Binding MetodoPago}" Width="*" />
+                    <DataGridTextColumn Header="MONTO" Binding="{Binding Precio, StringFormat={}{0:C}}" Width="*" />
+                    <DataGridTextColumn Header="ESTADO" Binding="{Binding Estado}" Width="Auto" />
+                    <DataGridTemplateColumn Header="ACCIONES" Width="160">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                    <Button Style="{StaticResource DataGridActionButtonStyle}"
+                                            Command="{Binding DataContext.VerPagoCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                            CommandParameter="{Binding}" ToolTip="Ver/Editar">
+                                        <TextBlock Text="Ver"/>
+                                    </Button>
+                                    <Button Style="{StaticResource DataGridActionButtonStyle}"
+                                            Command="{Binding DataContext.AnularPagoCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                            CommandParameter="{Binding}" ToolTip="Anular">
+                                        <TextBlock Text="Anular"/>
+                                    </Button>
+                                </StackPanel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <!-- Paginación (como en Socios) -->
+            <Border Grid.Row="2" Background="{StaticResource BackgroundLightBrush}" Padding="10" CornerRadius="4" Margin="0 10 0 0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock VerticalAlignment="Center" Foreground="{StaticResource TextSecondaryBrush}">
+               <Run Text="Mostrando "/>
+               <Run Text="{Binding DisplayFrom, Mode=OneWay}"/>
+               <Run Text=" – "/>
+               <Run Text="{Binding DisplayTo, Mode=OneWay}"/>
+               <Run Text=" de "/>
+               <Run Text="{Binding TotalCount, Mode=OneWay}"/>
+                    </TextBlock>
+
+                    <WrapPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                        <ComboBox Width="90"
+                       ItemsSource="{Binding PageSizes, Mode=OneWay}"
+                       SelectedItem="{Binding PageSize}"
+                       Style="{StaticResource FilterComboBoxStyle}"
+                       ToolTip="Elementos por página" Height="32" Margin="0,0,6,0"/>
+
+                        <Button Content="⏮" Command="{Binding GoFirstPageCommand}" Width="36" Height="32" Margin="0,0,4,0"/>
+                        <Button Content="◀"  Command="{Binding GoPrevPageCommand}"  Width="36" Height="32" Margin="0,0,8,0"/>
+
+                        <TextBlock VerticalAlignment="Center" Margin="6,0">
+                   <Run Text="Pág. "/>
+                   <Run Text="{Binding PageNumber, Mode=OneWay}"/>
+                   <Run Text=" / "/>
+                   <Run Text="{Binding TotalPages, Mode=OneWay}"/>
+                        </TextBlock>
+
+                        <Button Content="▶"  Command="{Binding GoNextPageCommand}"  Width="36" Height="32" Margin="8,0,4,0"/>
+                        <Button Content="⏭" Command="{Binding GoLastPageCommand}"  Width="36" Height="32" Margin="0,0,10,0"/>
+                    </WrapPanel>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- Overlay diálogo -->
+        <Grid x:Name="DialogOverlay"
+              Visibility="{Binding IsDialogOpen, Converter={StaticResource BoolToVisibilityConverter}}"
+              Background="#80000000"
+              Panel.ZIndex="1000"
+              HorizontalAlignment="Stretch"
+              VerticalAlignment="Stretch">
+            <ContentControl Content="{Binding DialogContent}"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"/>
+        </Grid>
     </Grid>
 </UserControl>

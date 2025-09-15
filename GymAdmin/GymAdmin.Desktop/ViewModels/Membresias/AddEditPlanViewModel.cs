@@ -2,6 +2,7 @@
 using CommunityToolkit.Mvvm.Input;
 using GymAdmin.Applications.DTOs.MembresiasDto;
 using GymAdmin.Applications.Interactor.PlanesMembresia;
+using GymAdmin.Applications.Interfaces.ValidacionesUI;
 using GymAdmin.Domain.Results;
 using System.ComponentModel;
 using System.Globalization;
@@ -11,56 +12,40 @@ namespace GymAdmin.Desktop.ViewModels.Membresias;
 public partial class AddEditPlanViewModel : ViewModelBase, IDataErrorInfo, IDisposable
 {
     private readonly ICreateOrUpdatePlanInteractor _upsert;
+    private readonly IValidationUIService _validationUI;
     private CancellationTokenSource? _cts;
 
-    public AddEditPlanViewModel(ICreateOrUpdatePlanInteractor upsert)
+    public AddEditPlanViewModel(ICreateOrUpdatePlanInteractor upsert, IValidationUIService validationUI)
     {
         _upsert = upsert;
+        _validationUI = validationUI;
+
         Activo = true;
         Titulo = "Nuevo Plan de Membresía";
 
-        // Si el CanExecute de Guardar depende de IsBusy, enlazalo:
         BindBusyToCommands(GuardarCommand);
     }
 
-    // -------------------- Estado --------------------
     [ObservableProperty] private string? errorMessage;
     [ObservableProperty] private string titulo = "Plan";
 
-    // -------------------- Campos --------------------
     [ObservableProperty] private int id;
     [ObservableProperty] private string nombre = string.Empty;
     [ObservableProperty] private string descripcion = string.Empty;
-
-    // strings para validar
-    [ObservableProperty] private string creditos = string.Empty;
-    [ObservableProperty] private string duracionDias = string.Empty;
-    [ObservableProperty] private string precioSugerido = string.Empty;
-
+    [ObservableProperty] private string creditos = string.Empty;      // numérico (string para validar)
+    [ObservableProperty] private string duracionDias = string.Empty;  // numérico
+    [ObservableProperty] private string precioSugerido = string.Empty;// numérico
     [ObservableProperty] private bool activo = true;
 
-    // -------------------- Validación (IDataErrorInfo) --------------------
-    public string Error => string.Empty;
+    [ObservableProperty] private bool hasNombreInteracted;
+    [ObservableProperty] private bool hasCreditosInteracted;
+    [ObservableProperty] private bool hasDuracionInteracted;
+    [ObservableProperty] private bool hasPrecioInteracted;
 
-    public string this[string columnName] => columnName switch
-    {
-        nameof(Nombre) => string.IsNullOrWhiteSpace(Nombre) ? "El nombre es obligatorio." : string.Empty,
-        nameof(Creditos) => !int.TryParse(Creditos, out var c) || c <= 0 ? "Créditos debe ser un entero > 0." : string.Empty,
-        nameof(DuracionDias) => !int.TryParse(DuracionDias, out var d) || d <= 0 ? "Duración debe ser un entero > 0." : string.Empty,
-        nameof(PrecioSugerido) => !decimal.TryParse(PrecioSugerido, NumberStyles.Number, CultureInfo.InvariantCulture, out var p) || p < 0 ? "Precio debe ser un número ≥ 0." : string.Empty,
-        _ => string.Empty
-    };
-
-    public bool FormularioValido =>
-        string.IsNullOrEmpty(this[nameof(Nombre)]) &&
-        string.IsNullOrEmpty(this[nameof(Creditos)]) &&
-        string.IsNullOrEmpty(this[nameof(DuracionDias)]) &&
-        string.IsNullOrEmpty(this[nameof(PrecioSugerido)]);
-
-    partial void OnNombreChanged(string value) => NotifyValidationChanged();
-    partial void OnCreditosChanged(string value) => NotifyValidationChanged();
-    partial void OnDuracionDiasChanged(string value) => NotifyValidationChanged();
-    partial void OnPrecioSugeridoChanged(string value) => NotifyValidationChanged();
+    partial void OnNombreChanged(string value) { HasNombreInteracted = true; NotifyValidationChanged(); }
+    partial void OnCreditosChanged(string value) { HasCreditosInteracted = true; NotifyValidationChanged(); }
+    partial void OnDuracionDiasChanged(string value) { HasDuracionInteracted = true; NotifyValidationChanged(); }
+    partial void OnPrecioSugeridoChanged(string value) { HasPrecioInteracted = true; NotifyValidationChanged(); }
 
     private void NotifyValidationChanged()
     {
@@ -68,6 +53,54 @@ public partial class AddEditPlanViewModel : ViewModelBase, IDataErrorInfo, IDisp
         GuardarCommand.NotifyCanExecuteChanged();
     }
 
+    public string Error => string.Empty;
+
+    public string this[string columnName] => columnName switch
+    {
+        nameof(Nombre) =>
+            !HasNombreInteracted ? string.Empty :
+            ValidarNombre(Nombre),
+
+        nameof(Creditos) =>
+            !HasCreditosInteracted ? string.Empty :
+            (!int.TryParse(Creditos, NumberStyles.Integer, CultureInfo.InvariantCulture, out var c) || c <= 0
+                ? "Créditos debe ser un entero > 0."
+                : string.Empty),
+
+        nameof(DuracionDias) =>
+            !HasDuracionInteracted ? string.Empty :
+            (!int.TryParse(DuracionDias, NumberStyles.Integer, CultureInfo.InvariantCulture, out var d) || d <= 0
+                ? "Duración debe ser un entero > 0."
+                : string.Empty),
+
+        nameof(PrecioSugerido) =>
+            !HasPrecioInteracted ? string.Empty :
+            (!decimal.TryParse(PrecioSugerido, NumberStyles.Number, CultureInfo.InvariantCulture, out var p) || p < 0
+                ? "Precio debe ser un número ≥ 0."
+                : string.Empty),
+
+        _ => string.Empty
+    };
+
+    private string ValidarNombre(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return "El nombre es obligatorio.";
+
+        var errores = _validationUI.ValidarNombreCompleto(value, "nombre");
+        return errores.Count > 0 ? errores[0] : string.Empty;
+    }
+
+    public bool FormularioValido =>
+        string.IsNullOrEmpty(ForceValidate(nameof(Nombre))) &&
+        string.IsNullOrEmpty(ForceValidate(nameof(Creditos))) &&
+        string.IsNullOrEmpty(ForceValidate(nameof(DuracionDias))) &&
+        string.IsNullOrEmpty(ForceValidate(nameof(PrecioSugerido)));
+
+    // Evalúa usando el indexer, respetando flags actuales
+    private string ForceValidate(string propertyName) => this[propertyName];
+
+    // Para edición:
     public void CargarParaEdicion(PlanMembresiaDto plan)
     {
         Id = plan.Id;
@@ -81,10 +114,16 @@ public partial class AddEditPlanViewModel : ViewModelBase, IDataErrorInfo, IDisp
         Titulo = "Editar Plan de Membresía";
     }
 
-    // -------------------- Commands --------------------
     [RelayCommand(CanExecute = nameof(CanGuardar))]
     private async Task GuardarAsync()
     {
+        // Forzar “mostrar errores” si el usuario no tocó algún campo (p.ej. click directo en Guardar)
+        if (!HasNombreInteracted) { HasNombreInteracted = true; OnPropertyChanged(nameof(Nombre)); }
+        if (!HasCreditosInteracted) { HasCreditosInteracted = true; OnPropertyChanged(nameof(Creditos)); }
+        if (!HasDuracionInteracted) { HasDuracionInteracted = true; OnPropertyChanged(nameof(DuracionDias)); }
+        if (!HasPrecioInteracted) { HasPrecioInteracted = true; OnPropertyChanged(nameof(PrecioSugerido)); }
+        OnPropertyChanged(nameof(FormularioValido));
+
         if (!FormularioValido) return;
 
         try
@@ -98,8 +137,8 @@ public partial class AddEditPlanViewModel : ViewModelBase, IDataErrorInfo, IDisp
             var dto = new PlanMembresiaDto
             {
                 Id = Id,
-                Nombre = Nombre.Trim(),
-                Descripcion = Descripcion?.Trim(),
+                Nombre = _validationUI.LimpiarYFormatearTexto(Nombre),
+                Descripcion = string.IsNullOrWhiteSpace(Descripcion) ? null : _validationUI.LimpiarYFormatearTexto(Descripcion),
                 Creditos = int.Parse(Creditos, CultureInfo.InvariantCulture),
                 DiasValidez = int.Parse(DuracionDias, CultureInfo.InvariantCulture),
                 Precio = decimal.Parse(PrecioSugerido, CultureInfo.InvariantCulture),
@@ -129,8 +168,7 @@ public partial class AddEditPlanViewModel : ViewModelBase, IDataErrorInfo, IDisp
 
     private bool CanGuardar() => FormularioValido && !IsBusy;
 
-    [RelayCommand]
-    private void Cancelar() => RequestClose();
+    [RelayCommand] private void Cancelar() => RequestClose();
 
     public void Dispose()
     {

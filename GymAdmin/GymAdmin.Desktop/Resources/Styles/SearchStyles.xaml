@@ -51,55 +51,60 @@
             <Setter.Value>
                 <ControlTemplate TargetType="ComboBox">
                     <Grid>
-                        <!-- Caja principal -->
                         <Border x:Name="MainBorder"
-                            Background="{TemplateBinding Background}"
-                            BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="6"
-                            SnapsToDevicePixels="True">
-                            <DockPanel>
-                                <!-- texto seleccionado -->
-                                <ContentPresenter Margin="8,0,32,0"
-                                              VerticalAlignment="Center"
-                                              HorizontalAlignment="Left"
-                                              Content="{TemplateBinding SelectionBoxItem}"
-                                              ContentStringFormat="{TemplateBinding SelectionBoxItemStringFormat}"
-                                              ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"/>
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6"
+                                SnapsToDevicePixels="True">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition />
+                                    <!-- contenido -->
+                                    <ColumnDefinition Width="32" />
+                                    <!-- botón -->
+                                </Grid.ColumnDefinitions>
 
-                                <!-- Botón desplegable -->
+                                <!-- contenido -->
+                                <ContentPresenter Grid.Column="0"
+                                                  Margin="{TemplateBinding Padding}"
+                                                  VerticalAlignment="Center"
+                                                  Content="{TemplateBinding SelectionBoxItem}"
+                                                  ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                                  SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+
+                                <!-- botón -->
                                 <ToggleButton x:Name="ToggleButton"
-                                          DockPanel.Dock="Right"
-                                          Focusable="False"
-                                          IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
-                                          ClickMode="Press"
-                                          Background="Transparent"
-                                          BorderThickness="0"
-                                          Width="20">
+                                              Grid.Column="1"
+                                              Focusable="False"
+                                              IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
+                                              ClickMode="Press"
+                                              Background="Transparent"
+                                              BorderThickness="0">
                                     <Path Data="M 0 0 L 4 4 L 8 0 Z"
-                                      Fill="{TemplateBinding Foreground}"
-                                      HorizontalAlignment="Center"
-                                      VerticalAlignment="Center"
-                                      Width="10" Height="6"/>
+                                          Fill="{TemplateBinding Foreground}"
+                                          HorizontalAlignment="Center"
+                                          VerticalAlignment="Center"
+                                          Width="10" Height="6"/>
                                 </ToggleButton>
-                            </DockPanel>
+                            </Grid>
                         </Border>
 
                         <!-- Popup -->
                         <Popup x:Name="PART_Popup"
-                           Placement="Bottom"
-                           IsOpen="{TemplateBinding IsDropDownOpen}"
-                           AllowsTransparency="True"
-                           Focusable="False"
-                           PopupAnimation="Slide">
+                               Placement="Bottom"
+                               IsOpen="{TemplateBinding IsDropDownOpen}"
+                               AllowsTransparency="True"
+                               Focusable="False"
+                               PopupAnimation="Slide">
                             <Border Background="White"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="1"
-                                CornerRadius="6"
-                                SnapsToDevicePixels="True">
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="6"
+                                    SnapsToDevicePixels="True">
                                 <ScrollViewer>
                                     <StackPanel IsItemsHost="True"
-                                            KeyboardNavigation.DirectionalNavigation="Contained"/>
+                                                KeyboardNavigation.DirectionalNavigation="Contained"/>
                                 </ScrollViewer>
                             </Border>
                         </Popup>
@@ -160,5 +165,31 @@
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
+    </Style>
+
+    <Style x:Key="FilterDatePickerStyle" TargetType="{x:Type DatePicker}">
+        <Setter Property="Height" Value="36"/>
+        <Setter Property="MinWidth" Value="160"/>
+        <Setter Property="Margin" Value="8,0,0,0"/>
+        <Setter Property="SelectedDateFormat" Value="Short"/>
+        <Style.Resources>
+            <Style TargetType="{x:Type DatePickerTextBox}">
+                <Setter Property="Height" Value="36"/>
+                <Setter Property="Padding" Value="10,0,10,0"/>
+                <Setter Property="VerticalContentAlignment" Value="Center"/>
+            </Style>
+        </Style.Resources>
+    </Style>
+    <Style x:Key="ValidatedSocioSearchTextBoxStyle" TargetType="TextBox" BasedOn="{StaticResource SearchTextBoxStyle}">
+        <Style.Triggers>
+            <MultiDataTrigger>
+                <MultiDataTrigger.Conditions>
+                    <Condition Binding="{Binding HasSocioInteracted}" Value="True"/>
+                    <Condition Binding="{Binding SocioSeleccionado}" Value="{x:Null}"/>
+                </MultiDataTrigger.Conditions>
+                <Setter Property="BorderBrush" Value="{StaticResource ErrorBrush}"/>
+                <Setter Property="BorderThickness" Value="1.5"/>
+            </MultiDataTrigger>
+        </Style.Triggers>
     </Style>
 </ResourceDictionary>

@@ -6,11 +6,29 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace GymAdmin.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class encriptadoDatosSensibles : Migration
+    public partial class AddMetodoPagoFkToPagos : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.CreateTable(
+                name: "MetodosPago",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    Nombre = table.Column<string>(type: "TEXT", maxLength: 60, nullable: false),
+                    IsActive = table.Column<bool>(type: "INTEGER", nullable: false, defaultValue: true),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false),
+                    DeletedAt = table.Column<DateTime>(type: "TEXT", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_MetodosPago", x => x.Id);
+                });
+
             migrationBuilder.CreateTable(
                 name: "PlanesMembresia",
                 columns: table => new
@@ -44,6 +62,7 @@ namespace GymAdmin.Infrastructure.Migrations
                     Nombre = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
                     Apellido = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
                     FechaRegistro = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    DniHash = table.Column<string>(type: "TEXT", nullable: false),
                     CreditosRestantes = table.Column<int>(type: "INTEGER", nullable: false, defaultValue: 0),
                     TotalCreditosComprados = table.Column<int>(type: "INTEGER", nullable: false, defaultValue: 0),
                     ExpiracionMembresia = table.Column<DateTime>(type: "TEXT", nullable: false),
@@ -137,10 +156,10 @@ namespace GymAdmin.Infrastructure.Migrations
                     PlanMembresiaId = table.Column<int>(type: "INTEGER", nullable: false),
                     Precio = table.Column<decimal>(type: "DECIMAL(10,2)", nullable: false),
                     FechaPago = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    MetodoPago = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
                     Observaciones = table.Column<string>(type: "TEXT", maxLength: 500, nullable: false),
                     CreditosAsignados = table.Column<int>(type: "INTEGER", nullable: false),
                     FechaVencimiento = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    MetodoPagoId = table.Column<int>(type: "INTEGER", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
                     IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false),
@@ -149,6 +168,12 @@ namespace GymAdmin.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Pagos", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Pagos_MetodosPago_MetodoPagoId",
+                        column: x => x.MetodoPagoId,
+                        principalTable: "MetodosPago",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Pagos_PlanesMembresia_PlanMembresiaId",
                         column: x => x.PlanMembresiaId,
@@ -167,6 +192,17 @@ namespace GymAdmin.Infrastructure.Migrations
                 name: "IX_Asistencias_SocioId",
                 table: "Asistencias",
                 column: "SocioId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_MetodosPago_Nombre",
+                table: "MetodosPago",
+                column: "Nombre",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Pagos_MetodoPagoId",
+                table: "Pagos",
+                column: "MetodoPagoId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Pagos_PlanMembresiaId",
@@ -211,6 +247,9 @@ namespace GymAdmin.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "Users");
+
+            migrationBuilder.DropTable(
+                name: "MetodosPago");
 
             migrationBuilder.DropTable(
                 name: "PlanesMembresia");

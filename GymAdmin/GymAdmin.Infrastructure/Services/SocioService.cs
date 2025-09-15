@@ -166,4 +166,14 @@ public class SocioService : ISocioService
             PageSize = size
         };
     }
+
+    public async Task<List<Socio>> GetAllForLookupAsync(CancellationToken ct = default)
+    {
+        var socios = await _unitOfWork.SocioRepo.GetAllAsync(ct);
+
+        return socios
+            .OrderBy(s => s.Apellido)
+            .ThenBy(s => s.Nombre)
+            .ToList();
+    }
 }

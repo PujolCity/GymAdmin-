@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GymAdmin.Infrastructure.Migrations
 {
     [DbContext(typeof(GymAdminDbContext))]
-    [Migration("20250903033813_encriptadoDatosSensibles")]
-    partial class encriptadoDatosSensibles
+    [Migration("20250915021700_PlanMembresiaDescriptionNull")]
+    partial class PlanMembresiaDescriptionNull
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -64,7 +64,43 @@ namespace GymAdmin.Infrastructure.Migrations
                     b.ToTable("Asistencias");
                 });
 
-            modelBuilder.Entity("GymAdmin.Domain.Entities.Pago", b =>
+            modelBuilder.Entity("GymAdmin.Domain.Entities.MetodoPago", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Nombre")
+                        .IsUnique();
+
+                    b.ToTable("MetodosPago");
+                });
+
+            modelBuilder.Entity("GymAdmin.Domain.Entities.Pagos", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -79,6 +115,11 @@ namespace GymAdmin.Infrastructure.Migrations
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("Estado")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.Property<DateTime>("FechaPago")
                         .HasColumnType("TEXT");
 
@@ -88,10 +129,8 @@ namespace GymAdmin.Infrastructure.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("MetodoPago")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT");
+                    b.Property<int>("MetodoPagoId")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Observaciones")
                         .IsRequired()
@@ -112,14 +151,22 @@ namespace GymAdmin.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Estado");
+
+                    b.HasIndex("FechaPago");
+
+                    b.HasIndex("MetodoPagoId");
+
                     b.HasIndex("PlanMembresiaId");
 
                     b.HasIndex("SocioId");
 
+                    b.HasIndex("FechaPago", "Estado");
+
                     b.ToTable("Pagos");
                 });
 
-            modelBuilder.Entity("GymAdmin.Domain.Entities.PlanMembresia", b =>
+            modelBuilder.Entity("GymAdmin.Domain.Entities.PlanesMembresia", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -135,12 +182,8 @@ namespace GymAdmin.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Descripcion")
-                        .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("TEXT");
-
-                    b.Property<int>("DiasPorSemana")
-                        .HasColumnType("INTEGER");
 
                     b.Property<int>("DiasValidez")
                         .HasColumnType("INTEGER");
@@ -195,7 +238,11 @@ namespace GymAdmin.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTime>("ExpiracionMembresia")
+                    b.Property<string>("DniHash")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ExpiracionMembresia")
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("FechaRegistro")
@@ -341,9 +388,15 @@ namespace GymAdmin.Infrastructure.Migrations
                     b.Navigation("Socio");
                 });
 
-            modelBuilder.Entity("GymAdmin.Domain.Entities.Pago", b =>
+            modelBuilder.Entity("GymAdmin.Domain.Entities.Pagos", b =>
                 {
-                    b.HasOne("GymAdmin.Domain.Entities.PlanMembresia", "PlanMembresia")
+                    b.HasOne("GymAdmin.Domain.Entities.MetodoPago", "MetodoPagoRef")
+                        .WithMany("Pagos")
+                        .HasForeignKey("MetodoPagoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("GymAdmin.Domain.Entities.PlanesMembresia", "PlanMembresia")
                         .WithMany()
                         .HasForeignKey("PlanMembresiaId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -355,9 +408,16 @@ namespace GymAdmin.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.Navigation("MetodoPagoRef");
+
                     b.Navigation("PlanMembresia");
 
                     b.Navigation("Socio");
+                });
+
+            modelBuilder.Entity("GymAdmin.Domain.Entities.MetodoPago", b =>
+                {
+                    b.Navigation("Pagos");
                 });
 
             modelBuilder.Entity("GymAdmin.Domain.Entities.Socio", b =>

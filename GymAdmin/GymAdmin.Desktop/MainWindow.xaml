@@ -16,7 +16,8 @@
         xmlns:views="clr-namespace:GymAdmin.Desktop.Views"
         xmlns:viewModels="clr-namespace:GymAdmin.Desktop.ViewModels"
         xmlns:sociosVM="clr-namespace:GymAdmin.Desktop.ViewModels.Socios"
-        xmlns:membresiasVM="clr-namespace:GymAdmin.Desktop.ViewModels.Membresias">
+        xmlns:membresiasVM="clr-namespace:GymAdmin.Desktop.ViewModels.Membresias"
+        xmlns:pagosVM="clr-namespace:GymAdmin.Desktop.ViewModels.Pagos">
 
     <Window.Resources>
         <DataTemplate DataType="{x:Type viewModels:InicioViewModel}">
@@ -27,11 +28,7 @@
             <views:SociosView/>
         </DataTemplate>
 
-        <DataTemplate DataType="{x:Type membresiasVM:MembresiasViewModel}">
-            <views:MembresiasView/>
-        </DataTemplate>
-
-        <DataTemplate DataType="{x:Type viewModels:PagosViewModel}">
+        <DataTemplate DataType="{x:Type pagosVM:PagosViewModel}">
             <views:PagosView/>
         </DataTemplate>
 
@@ -111,15 +108,6 @@
                         <StackPanel Orientation="Horizontal">
                             <fa:IconImage Icon="CreditCard" Style="{StaticResource menuButtonIcon}" />
                             <TextBlock Text="Pagos" Style="{StaticResource menuButtonText}"/>
-                        </StackPanel>
-                    </RadioButton>
-
-                    <RadioButton Style="{StaticResource menuButton}"
-                                 Tag="{StaticResource TextInvertedBrush}"
-                                 Command="{Binding ShowMembresiasViewCommand}">
-                        <StackPanel Orientation="Horizontal">
-                            <fa:IconImage Icon="CalendarCheck" Style="{StaticResource menuButtonIcon}" />
-                            <TextBlock Text="Membresías" Style="{StaticResource menuButtonText}"/>
                         </StackPanel>
                     </RadioButton>
 

@@ -1,8 +1,10 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using GymAdmin.Applications.DTOs.PagosDto;
 using GymAdmin.Applications.DTOs.SociosDto;
 using GymAdmin.Applications.Interactor.SociosInteractors;
 using GymAdmin.Desktop.ViewModels.Dialogs;
+using GymAdmin.Desktop.ViewModels.Pagos;
 using GymAdmin.Desktop.Views.Dialogs;
 using GymAdmin.Domain.Enums;
 using Microsoft.Extensions.DependencyInjection;
@@ -73,7 +75,7 @@ public sealed partial class SociosViewModel : ViewModelBase, IDisposable
     private SocioDto? socioSeleccionado;
     partial void OnSocioSeleccionadoChanged(SocioDto? value)
     {
-        
+
     }
 
     [ObservableProperty]
@@ -82,8 +84,8 @@ public sealed partial class SociosViewModel : ViewModelBase, IDisposable
     [ObservableProperty]
     private bool isDialogOpen;
 
-    public SociosViewModel(IGetAllSociosInteractor getAll, 
-        IServiceProvider sp, 
+    public SociosViewModel(IGetAllSociosInteractor getAll,
+        IServiceProvider sp,
         IDeleteSocioInteractor deleteSocioInteractor)
     {
         _getAllSociosInteractor = getAll;
@@ -202,13 +204,13 @@ public sealed partial class SociosViewModel : ViewModelBase, IDisposable
 
     private bool CanSimpleAction() => !IsBusy;
 
-    [RelayCommand(CanExecute = nameof(CanRowAction))] 
-    private async Task EditarSocio() 
-    { 
-        /* TODO */ 
+    [RelayCommand(CanExecute = nameof(CanRowAction))]
+    private async Task EditarSocio()
+    {
+        /* TODO */
     }
 
-    
+
     [RelayCommand(CanExecute = nameof(CanSimpleAction))]
     private async Task EliminarSocio()
     {
@@ -237,7 +239,34 @@ public sealed partial class SociosViewModel : ViewModelBase, IDisposable
         }
     }
 
-    [RelayCommand(CanExecute = nameof(CanRowAction))] private void RegistrarPago() { /* TODO */ }
+    [RelayCommand(CanExecute = nameof(CanRowAction))]
+    private void RegistrarPago()
+    {
+        var vm = _sp.GetRequiredService<AddPagoViewModel>();
+     
+        SocioLookupDto? socio = null;
+        
+        if (socioSeleccionado != null)
+        {
+            socio = new SocioLookupDto
+            {
+                Dni = SocioSeleccionado?.Dni,
+                Id = SocioSeleccionado?.Id ?? 0,
+                NombreCompleto = SocioSeleccionado?.NombreCompleto
+            };
+        }
+
+        vm.Initialize(socio);
+
+        vm.CloseRequested += async () =>
+        {
+            IsDialogOpen = false; DialogContent = null;
+            await LoadAsync();
+        };
+
+        OpenDialog(new AddPagoDialog { DataContext = vm });
+    }
+
     [RelayCommand(CanExecute = nameof(CanRowAction))] private void RegistrarAsistencia() { /* TODO */ }
     private bool CanRowAction() => !IsBusy && SocioSeleccionado is not null;
 

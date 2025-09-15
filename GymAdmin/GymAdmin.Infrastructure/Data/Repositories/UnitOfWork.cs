@@ -14,6 +14,7 @@ public class UnitOfWork : IUnitOfWork
     public IRepository<User> UserRepo { get; }
     public IRepository<Asistencia> AsistenciaRepo { get; }
     public IRepository<SystemConfig> SystemConfigRepo { get; }
+   public IRepository<MetodoPago> MetodoPagoRepo { get; }
 
     public UnitOfWork(GymAdminDbContext context,
         IRepository<SystemConfig> systemConfigRepo,
@@ -21,7 +22,8 @@ public class UnitOfWork : IUnitOfWork
         IRepository<User> userRepo,
         ISocioRepository socioRepo,
         IRepository<PlanesMembresia> membresiaRepo,
-        IRepository<Pagos> pagosRepo)
+        IRepository<Pagos> pagosRepo,
+        IRepository<MetodoPago> metodoPagoRepo)
     {
         _context = context;
         SystemConfigRepo = systemConfigRepo;
@@ -30,6 +32,7 @@ public class UnitOfWork : IUnitOfWork
         SocioRepo = socioRepo;
         MembresiaRepo = membresiaRepo;
         PagosRepo = pagosRepo;
+        MetodoPagoRepo = metodoPagoRepo;
     }
 
     public async Task<int> CommitAsync(CancellationToken ct = default)

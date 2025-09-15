@@ -1,4 +1,5 @@
-﻿using GymAdmin.Applications.Interactor.PlanesMembresia;
+﻿using GymAdmin.Applications.Interactor.PagosInteractors;
+using GymAdmin.Applications.Interactor.PlanesMembresia;
 using GymAdmin.Applications.Interactor.SociosInteractors;
 using GymAdmin.Domain.Interfaces.Repositories;
 using GymAdmin.Domain.Interfaces.Services;
@@ -46,6 +47,11 @@ public static class ConfigurationServiceCollectionExtensions
         services.AddTransient<ICreateOrUpdatePlanInteractor, CreateOrUpdatePlanInteractor>();
         services.AddTransient<IDeletePlanMembresiaInteractor, DeletePlanMembresiaInteractor>();
 
+        services.AddTransient<IGetPagosInteractor, GetPagosInteractor>();
+        services.AddTransient<IGetMetodosPagoInteractor, GetMetodosPagoInteractor>();
+        services.AddTransient<IGetSociosLookupInteractor, GetSociosLookupInteractor>();
+        services.AddTransient<ICreatePagoInteractor, CreatePagoInteractor>();
+
         return services;
     }
 
@@ -54,6 +60,7 @@ public static class ConfigurationServiceCollectionExtensions
     {
         services.AddTransient<ISocioService, SocioService>();
         services.AddTransient<IPlanMembresiaService, PlanMembresiaService>();
+        services.AddTransient<IPagosServices, PagosServices>();
 
         return services;
     }
