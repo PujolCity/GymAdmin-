@@ -14,7 +14,7 @@ namespace GymAdmin.Desktop.ViewModels.Pagos;
 public partial class PagosViewModel : ViewModelBase, IDisposable
 {
     private readonly IGetPagosInteractor _getPagosInteractor;
-    //private readonly IVoidPaymentInteractor _void;
+    private readonly IAnularPagoInteractor _anularPagoInteractor;
     private readonly IGetMetodosPagoInteractor _getMetodosPago;
     private readonly IServiceProvider _sp;
 
@@ -23,30 +23,63 @@ public partial class PagosViewModel : ViewModelBase, IDisposable
     public ObservableCollection<PagoDto> Pagos { get; } = new();
     public ObservableCollection<MetodoPagoDto> MetodosPago { get; } = new();
     public ObservableCollection<string> Estados { get; } = new(new[] { "Todos", "Pagado", "Anulado" });
+    public ObservableCollection<int> PageSizes { get; } = new(new[] { 10, 25, 50, 100 });
 
     [ObservableProperty] private string textoFiltro = string.Empty;
     [ObservableProperty] private DateTime? fechaDesde = DateTime.Today.AddDays(-7);
     [ObservableProperty] private DateTime? fechaHasta = DateTime.Today;
     [ObservableProperty] private MetodoPagoDto? metodoSeleccionado;
-    [ObservableProperty] private string estadoSeleccionado = "Todos";
+    
+    [ObservableProperty] 
+    private string estadoSeleccionado = "Todos";
+    
+    [ObservableProperty]
+    private string sortBy = "FECHA";
 
+    [ObservableProperty]
+    private bool sortDesc;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(DisplayFrom))]
+    [NotifyPropertyChangedFor(nameof(DisplayTo))]
+    [NotifyCanExecuteChangedFor(nameof(GoFirstPageCommand))]
+    [NotifyCanExecuteChangedFor(nameof(GoPrevPageCommand))]
+    [NotifyCanExecuteChangedFor(nameof(GoNextPageCommand))]
+    [NotifyCanExecuteChangedFor(nameof(GoLastPageCommand))]
+    private int pageNumber = 1;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(DisplayFrom))]
+    [NotifyPropertyChangedFor(nameof(DisplayTo))]
+    private int pageSize = 25;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(DisplayFrom))]
+    [NotifyPropertyChangedFor(nameof(DisplayTo))]
+    [NotifyCanExecuteChangedFor(nameof(GoNextPageCommand))]
+    [NotifyCanExecuteChangedFor(nameof(GoLastPageCommand))]
+    private int totalPages = 1;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(DisplayFrom))]
+    [NotifyPropertyChangedFor(nameof(DisplayTo))]
+    private int totalCount;
+
+    public int DisplayFrom => Math.Min(((PageNumber - 1) * PageSize) + 1, Math.Max(1, TotalCount));
+    public int DisplayTo => Math.Min(PageNumber * PageSize, TotalCount);
+    
     [ObservableProperty] private PagoDto? pagoSeleccionado;
     [ObservableProperty] private bool isDialogOpen;
     [ObservableProperty] private object? dialogContent;
 
-    [ObservableProperty] private int pageNumber = 1;
-    [ObservableProperty] private int pageSize = 25;
-    [ObservableProperty] private int totalPages = 1;
-    [ObservableProperty] private int totalCount;
-
     public PagosViewModel(
         IGetPagosInteractor get,
-        //IVoidPaymentInteractor voidInteractor,
+        IAnularPagoInteractor anularPagoInteractor,
         IGetMetodosPagoInteractor getMethods,
         IServiceProvider sp)
     {
         _getPagosInteractor = get;
-        //_void = voidInteractor;
+        _anularPagoInteractor = anularPagoInteractor;
         _getMetodosPago = getMethods;
         _sp = sp;
 
@@ -109,7 +142,7 @@ public partial class PagosViewModel : ViewModelBase, IDisposable
         catch (OperationCanceledException) { }
     }
 
-    [RelayCommand(CanExecute = nameof(CanSimple))]
+    [RelayCommand(CanExecute = nameof(CanSimpleAction))]
     private async Task LoadAsync(CancellationToken ct = default)
     {
         try
@@ -130,7 +163,9 @@ public partial class PagosViewModel : ViewModelBase, IDisposable
                 FechaHasta = FechaHasta?.AddDays(1).AddTicks(-1),
                 Status = estado,
                 PageNumber = PageNumber,
-                PageSize = PageSize
+                PageSize = PageSize,
+                SortBy = SortBy,
+                SortDesc = SortDesc
             };
 
             var result = await _getPagosInteractor.ExecuteAsync(req, ct);
@@ -151,9 +186,9 @@ public partial class PagosViewModel : ViewModelBase, IDisposable
         foreach (var m in metodos) MetodosPago.Add(m);
     }
 
-    private bool CanSimple() => !IsBusy;
+    private bool CanSimpleAction() => !IsBusy;
 
-    [RelayCommand(CanExecute = nameof(CanSimple))]
+    [RelayCommand(CanExecute = nameof(CanSimpleAction))]
     private void NuevoPago()
     {
         var vm = _sp.GetRequiredService<AddPagoViewModel>();
@@ -165,7 +200,7 @@ public partial class PagosViewModel : ViewModelBase, IDisposable
         OpenDialog(new AddPagoDialog { DataContext = vm });
     }
 
-    [RelayCommand(CanExecute = nameof(CanSimple))]
+    [RelayCommand(CanExecute = nameof(CanSimpleAction))]
     private void VerPago()
     {
         //if (PagoSeleccionado is null) return;
@@ -175,12 +210,11 @@ public partial class PagosViewModel : ViewModelBase, IDisposable
         //OpenDialog(new ViewPaymentDialog { DataContext = vm });
     }
 
-    [RelayCommand(CanExecute = nameof(CanSimple))]
+    [RelayCommand(CanExecute = nameof(CanSimpleAction))]
     private async Task AnularPago()
     {
         if (PagoSeleccionado is null) return;
 
-        // Confirmación
         var ok = await ConfirmAsync("Anular pago",
             $"¿Querés anular el pago #{PagoSeleccionado.Id} por {PagoSeleccionado.Precio:C}?\n" +
             $"Esta acción no elimina, sólo cambia el estado a Anulado.");
@@ -189,17 +223,23 @@ public partial class PagosViewModel : ViewModelBase, IDisposable
 
         try
         {
-            //IsBusy = true;
-            //var result = await _void.ExecuteAsync(PagoSeleccionado.Id, CancellationToken.None);
-            //if (result.IsSuccess) await LoadAsync();
-            //else ErrorMessage = string.Join(Environment.NewLine, result.Errors);
+            IsBusy = true;
+            var result = await _anularPagoInteractor.ExecuteAsync(PagoSeleccionado, CancellationToken.None);
+            if (result.IsSuccess) await LoadAsync();
+            else ErrorMessage = string.Join(Environment.NewLine, result.Errors);
         }
         finally
         {
             IsBusy = false;
         }
     }
-
+    
+    [RelayCommand(CanExecute = nameof(CanSimpleAction))]
+    private void LimpiarFiltro()
+    {
+        TextoFiltro = string.Empty;
+        EstadoSeleccionado = "Todos";
+    }
     private void OpenDialog(object content) { DialogContent = content; IsDialogOpen = true; }
 
     private async Task<bool> ConfirmAsync(string title, string msg)

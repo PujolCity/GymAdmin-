@@ -14,6 +14,7 @@
         <Grid IsEnabled="{Binding IsDialogOpen, Converter={StaticResource InverseBoolConverter}}">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
@@ -81,29 +82,100 @@
                 </WrapPanel>
             </Border>
 
+            <TextBlock Grid.Row="1" Margin="0 0 0 10"
+                       Text="{Binding TotalCount, StringFormat='Pagos encontrados: {0}'}"
+                       Foreground="{StaticResource TextSecondaryBrush}"
+                       FontSize="13" FontWeight="SemiBold"/>
             <!-- DataGrid -->
-            <DataGrid Grid.Row="1" ItemsSource="{Binding Pagos}" SelectedItem="{Binding PagoSeleccionado}"
-                AutoGenerateColumns="False" IsReadOnly="True" Style="{StaticResource BaseDataGridStyle}">
+            <DataGrid Grid.Row="2" 
+                      ItemsSource="{Binding Pagos}" 
+                      SelectedItem="{Binding PagoSeleccionado}"
+                      Sorting="DataGrid_Sorting"
+                      IsReadOnly="True" 
+                      Style="{StaticResource BaseDataGridStyle}"
+                      HorizontalScrollBarVisibility="Auto"
+                      ScrollViewer.CanContentScroll="True">
+                
+                <DataGrid.Resources>
+                    <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+                        <Setter Property="VerticalAlignment" Value="Center"/>
+                        <Setter Property="HorizontalAlignment" Value="Center"/>
+                        <Setter Property="TextAlignment" Value="Center"/>
+                        <Setter Property="Padding" Value="8 6"/>
+                    </Style>
+                </DataGrid.Resources>
+                
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="FECHA" Binding="{Binding FechaPago, StringFormat={}{0:dd/MM/yyyy HH:mm}}" Width="*" />
-                    <DataGridTextColumn Header="SOCIO" Binding="{Binding SocioNombre}" Width="2*" />
-                    <DataGridTextColumn Header="PLAN" Binding="{Binding PlanNombre}" Width="*" />
-                    <DataGridTextColumn Header="MÉTODO" Binding="{Binding MetodoPago}" Width="*" />
-                    <DataGridTextColumn Header="MONTO" Binding="{Binding Precio, StringFormat={}{0:C}}" Width="*" />
-                    <DataGridTextColumn Header="ESTADO" Binding="{Binding Estado}" Width="Auto" />
+                    <DataGridTemplateColumn Width="Auto" MinWidth="50" Header=" " IsReadOnly="True" SortMemberPath="Estado">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Border Width="14" Height="14" CornerRadius="7"
+                                        Background="{Binding Estado, Converter={StaticResource PagoStatusToColorConverter}}"
+                                        HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <Border.ToolTip>
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding Estado}" FontWeight="Bold"/>
+                                        </StackPanel>
+                                    </Border.ToolTip>
+                                </Border>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTextColumn Header="FECHA" 
+                                        Binding="{Binding FechaPago, StringFormat={}{0:dd/MM/yyyy}}" 
+                                        Width="*">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock" BasedOn="{StaticResource CenteredCellText}" />
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+                    <DataGridTextColumn Header="SOCIO" 
+                                        Binding="{Binding SocioNombre}" Width="2*">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock" BasedOn="{StaticResource OnlyVerticalCenteredCellText}" />
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+                    <DataGridTextColumn Header="PLAN" 
+                                        Binding="{Binding PlanNombre}" Width="*">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock" BasedOn="{StaticResource CenteredCellText}" />
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+                    <DataGridTextColumn Header="MÉTODO" 
+                                        Binding="{Binding MetodoPago}" Width="*">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock" BasedOn="{StaticResource CenteredCellText}" />
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+                    <DataGridTextColumn Header="MONTO" 
+                                        Binding="{Binding Precio, StringFormat={}{0:C}}" Width="*">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock" BasedOn="{StaticResource CenteredCellText}" />
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+                    <DataGridTextColumn Header="ESTADO" 
+                                        Binding="{Binding Estado}" Width="Auto">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+                                <Setter Property="Foreground" Value="{Binding Estado, Converter={StaticResource PagoStatusToColorConverter}}"/>
+                                <Setter Property="FontWeight" Value="SemiBold"/>
+                                <Setter Property="HorizontalAlignment" Value="Center"/>
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
                     <DataGridTemplateColumn Header="ACCIONES" Width="160">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                     <Button Style="{StaticResource DataGridActionButtonStyle}"
                                             Command="{Binding DataContext.VerPagoCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                            CommandParameter="{Binding}" ToolTip="Ver/Editar">
-                                        <TextBlock Text="Ver"/>
+                                            CommandParameter="{Binding}" ToolTip="Ver">
+                                        <fa:IconImage Icon="Eye" Width="16" Height="16" Foreground="{StaticResource BackgroundPrimaryDarkBrush}"/>
                                     </Button>
                                     <Button Style="{StaticResource DataGridActionButtonStyle}"
                                             Command="{Binding DataContext.AnularPagoCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                             CommandParameter="{Binding}" ToolTip="Anular">
-                                        <TextBlock Text="Anular"/>
+                                        <fa:IconImage Icon="Ban" Width="16" Height="16" Foreground="{StaticResource SecondaryBrush}"/>
                                     </Button>
                                 </StackPanel>
                             </DataTemplate>
@@ -113,7 +185,7 @@
             </DataGrid>
 
             <!-- Paginación (como en Socios) -->
-            <Border Grid.Row="2" Background="{StaticResource BackgroundLightBrush}" Padding="10" CornerRadius="4" Margin="0 10 0 0">
+            <Border Grid.Row="3" Background="{StaticResource BackgroundLightBrush}" Padding="10" CornerRadius="4" Margin="0 10 0 0">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
@@ -121,29 +193,29 @@
                     </Grid.ColumnDefinitions>
 
                     <TextBlock VerticalAlignment="Center" Foreground="{StaticResource TextSecondaryBrush}">
-               <Run Text="Mostrando "/>
-               <Run Text="{Binding DisplayFrom, Mode=OneWay}"/>
-               <Run Text=" – "/>
-               <Run Text="{Binding DisplayTo, Mode=OneWay}"/>
-               <Run Text=" de "/>
-               <Run Text="{Binding TotalCount, Mode=OneWay}"/>
+            <Run Text="Mostrando "/>
+            <Run Text="{Binding DisplayFrom, Mode=OneWay}"/>
+            <Run Text=" – "/>
+            <Run Text="{Binding DisplayTo, Mode=OneWay}"/>
+            <Run Text=" de "/>
+            <Run Text="{Binding TotalCount, Mode=OneWay}"/>
                     </TextBlock>
 
                     <WrapPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
                         <ComboBox Width="90"
-                       ItemsSource="{Binding PageSizes, Mode=OneWay}"
-                       SelectedItem="{Binding PageSize}"
-                       Style="{StaticResource FilterComboBoxStyle}"
-                       ToolTip="Elementos por página" Height="32" Margin="0,0,6,0"/>
+                    ItemsSource="{Binding PageSizes, Mode=OneWay}"
+                    SelectedItem="{Binding PageSize}"
+                    Style="{StaticResource FilterComboBoxStyle}"
+                    ToolTip="Elementos por página" Height="32" Margin="0,0,6,0"/>
 
                         <Button Content="⏮" Command="{Binding GoFirstPageCommand}" Width="36" Height="32" Margin="0,0,4,0"/>
                         <Button Content="◀"  Command="{Binding GoPrevPageCommand}"  Width="36" Height="32" Margin="0,0,8,0"/>
 
                         <TextBlock VerticalAlignment="Center" Margin="6,0">
-                   <Run Text="Pág. "/>
-                   <Run Text="{Binding PageNumber, Mode=OneWay}"/>
-                   <Run Text=" / "/>
-                   <Run Text="{Binding TotalPages, Mode=OneWay}"/>
+                <Run Text="Pág. "/>
+                <Run Text="{Binding PageNumber, Mode=OneWay}"/>
+                <Run Text=" / "/>
+                <Run Text="{Binding TotalPages, Mode=OneWay}"/>
                         </TextBlock>
 
                         <Button Content="▶"  Command="{Binding GoNextPageCommand}"  Width="36" Height="32" Margin="8,0,4,0"/>
@@ -159,7 +231,8 @@
               Background="#80000000"
               Panel.ZIndex="1000"
               HorizontalAlignment="Stretch"
-              VerticalAlignment="Stretch">
+              VerticalAlignment="Stretch"                  
+              MouseDown="DialogOverlay_MouseDown">
             <ContentControl Content="{Binding DialogContent}"
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center"/>

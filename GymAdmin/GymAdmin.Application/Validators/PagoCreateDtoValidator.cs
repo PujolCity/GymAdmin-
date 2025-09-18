@@ -3,9 +3,9 @@ using GymAdmin.Applications.DTOs.PagosDto;
 
 namespace GymAdmin.Applications.Validators;
 
-public class PagroCreateDtoValidator : AbstractValidator<PagoCreateDto>
+public class PagoCreateDtoValidator : AbstractValidator<PagoCreateDto>
 {
-    public PagroCreateDtoValidator()
+    public PagoCreateDtoValidator()
     {
         RuleFor(p => p.SocioId)
             .GreaterThan(0).WithMessage("El ID del socio debe ser mayor que cero.");

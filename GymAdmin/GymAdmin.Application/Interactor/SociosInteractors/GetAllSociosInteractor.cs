@@ -40,7 +40,8 @@ public class GetAllSociosInteractor : IGetAllSociosInteractor
             ExpiracionMembresia = s.ExpiracionMembresia,
             Estado = s.IsMembresiaExpirada ? "Inactivo" : "Activo",
             UltimaAsistencia = s.UltimaAsistencia,
-            VigenciaTexto = s.VigenciaTexto 
+            VigenciaTexto = s.VigenciaTexto,
+            CreditosRestantes = s.CreditosRestantes
         }).ToList();
 
         return new PagedResult<SocioDto>

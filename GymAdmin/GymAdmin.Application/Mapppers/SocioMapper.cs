@@ -15,6 +15,7 @@ public static class SocioMapper
             Nombre = socioDto.Nombre,
             Apellido = socioDto.Apellido,
             Dni = socioDto.Dni,
+            ExpiracionMembresia = DateTime.UtcNow.AddDays(-1) 
         };
     }
 

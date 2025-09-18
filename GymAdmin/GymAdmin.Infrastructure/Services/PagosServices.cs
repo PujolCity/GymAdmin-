@@ -14,6 +14,7 @@ public class PagosServices : IPagosServices
     private readonly ILogger<PagosServices> _logger;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICryptoService _cryptoService;
+    private const int CREDITOS_DEFAULT = 0;
 
     public PagosServices(ILogger<PagosServices> logger,
         IUnitOfWork unitOfWorks,
@@ -134,9 +135,95 @@ public class PagosServices : IPagosServices
         };
     }
 
-    public Task<Result> AnularPagoAsync(int pagoId, CancellationToken ct = default)
+    public async Task<Result> AnularPagoAsync(Pagos pagoAnulacion, CancellationToken ct = default)
     {
-        throw new NotImplementedException();
+        // ⚠️ Sólo usamos el Id (evitamos “update por objeto venido de UI”)
+        var pagoId = pagoAnulacion.Id;
+
+        await using var tx = await _unitOfWork.BeginTransactionAsync(ct);
+        try
+        {
+            _logger.LogDebug("AnularPagoAsync INICIO. PagoId={PagoId}", pagoId);
+
+            // 1) Carga con tracking + socio (puntos cómodos de breakpoint)
+            var pago = await _unitOfWork.PagosRepo.Query()
+                .Include(p => p.Socio)
+                .SingleOrDefaultAsync(p => p.Id == pagoId, ct);
+
+            if (pago is null)
+            {
+                _logger.LogWarning("Pago no encontrado. PagoId={PagoId}", pagoId);
+                await tx.RollbackAsync(ct);
+                return Result.Fail("No existe un pago con ese Id.");
+            }
+
+            if (pago.Estado == EstadoPago.Anulado)
+            {
+                _logger.LogDebug("Pago ya estaba anulado. PagoId={PagoId}", pagoId);
+                await tx.CommitAsync(ct); // idempotente
+                return Result.Ok();
+            }
+
+            var socio = pago.Socio ?? throw new InvalidOperationException("Pago sin socio asociado.");
+            var saldoAntes = socio.CreditosRestantes;
+            var aRestar = pago.CreditosAsignados;
+
+            _logger.LogDebug("Validación saldo. SocioId={SocioId}, SaldoAntes={Saldo}, CreditosDelPago={Cred}",
+                socio.Id, saldoAntes, aRestar);
+
+            // 2) Validación de consumo (regla simple sin ledger)
+            if (saldoAntes < aRestar)
+            {
+                _logger.LogWarning("Saldo insuficiente para anular. SocioId={SocioId}, Saldo={Saldo}, ARestar={ARestar}",
+                    socio.Id, saldoAntes, aRestar);
+                await tx.RollbackAsync(ct);
+                return Result.Fail("No se puede anular: ya se consumieron créditos de ese pago.");
+            }
+
+            // 3) Revertir saldo
+            socio.CreditosRestantes = saldoAntes - aRestar;
+
+            // 4) Recalcular vencimiento si este pago sostenía el actual
+            var expAntes = socio.ExpiracionMembresia;
+            var sosteniaVenc = expAntes != null && expAntes == pago.FechaVencimiento;
+
+            DateTime? nuevoVenc = expAntes;
+            if (sosteniaVenc)
+            {
+                nuevoVenc = await _unitOfWork.PagosRepo.Query()
+                    .Where(x => x.SocioId == socio.Id && x.Estado == EstadoPago.Pagado && x.Id != pago.Id)
+                    .MaxAsync(x => (DateTime?)x.FechaVencimiento, ct);
+
+                socio.ExpiracionMembresia = nuevoVenc;
+            }
+
+            // 5) Marcar anulado
+            pago.Estado = EstadoPago.Anulado;
+
+            _logger.LogDebug("Aplicando cambios. SocioId={SocioId}, Saldo {Antes}->{Despues}, Vence {ExpAntes}->{ExpDespues}",
+                socio.Id, saldoAntes, socio.CreditosRestantes, expAntes, socio.ExpiracionMembresia);
+
+            // 6) Guardar y commit TX
+            var affected = await _unitOfWork.CommitAsync(ct);
+            _logger.LogDebug("SaveChanges OK. Filas afectadas={Affected}", affected);
+
+            await tx.CommitAsync(ct);
+            _logger.LogDebug("Transacción COMMIT. PagoId={PagoId}", pagoId);
+
+            return Result.Ok();
+        }
+        catch (DbUpdateConcurrencyException ex)
+        {
+            await tx.RollbackAsync(ct);
+            _logger.LogError(ex, "Concurrencia al anular pago. PagoId={PagoId}", pagoAnulacion.Id);
+            return Result.Fail("Otro proceso modificó el registro. Reintentá.");
+        }
+        catch (Exception ex)
+        {
+            await tx.RollbackAsync(ct);
+            _logger.LogError(ex, "Error al anular pago. PagoId={PagoId}", pagoAnulacion.Id);
+            return Result.Fail("Ocurrió un error al anular el pago.");
+        }
     }
 
     public async Task<Result> CrearPagoAsync(Pagos pago, CancellationToken ct = default)
@@ -151,9 +238,12 @@ public class PagosServices : IPagosServices
         if (metodo is null)
             return Result.Fail("No existe un método de pago con el Id.");
 
+        socio.AplicaCompraReseteando(plan.Creditos, pago.FechaVencimiento);
+
         try
         {
             await _unitOfWork.PagosRepo.AddAsync(pago, ct);
+            _unitOfWork.SocioRepo.Update(socio);
             await _unitOfWork.CommitAsync(ct);
             return Result.Ok();
         }

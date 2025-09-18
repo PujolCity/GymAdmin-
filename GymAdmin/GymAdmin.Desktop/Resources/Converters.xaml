@@ -14,4 +14,5 @@
     <conv:GreaterThanZeroToBoolConverter  x:Key="GreaterThanZeroToBoolConverter"/>
     <conv:MinLengthToBoolConverter x:Key="MinLength2Converter"  MinLength="2"/>
     <conv:And3BoolMultiConverter x:Key="And3BoolMultiConverter"/>
+    <conv:PagoStatusToColorConverter x:Key="PagoStatusToColorConverter"/>
 </ResourceDictionary>

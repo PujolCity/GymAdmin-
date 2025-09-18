@@ -1,4 +1,5 @@
-﻿using GymAdmin.Applications.DTOs.MetodosDePagoDto;
+﻿using GymAdmin.Applications.DTOs;
+using GymAdmin.Applications.DTOs.MetodosDePagoDto;
 using GymAdmin.Applications.DTOs.PagosDto;
 using GymAdmin.Domain.Entities;
 using GymAdmin.Domain.Enums;
@@ -29,6 +30,14 @@ public static class PagosMapper
             Estado = EstadoPago.Pagado,
             FechaPago = pagoDto.FechaPago,
             FechaVencimiento = pagoDto.FechaVencimiento
+        };
+    }
+
+    public static Pagos ToPagos (this BaseDeleteRequest baseDeleteRequest)
+    {
+        return new Pagos
+        {
+            Id = baseDeleteRequest.IdToDelete
         };
     }
 }

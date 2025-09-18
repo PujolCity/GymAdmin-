@@ -14,7 +14,7 @@ public class Socio : EntityBase, IEncryptableEntity
     public int CreditosRestantes { get; set; }
     public int TotalCreditosComprados { get; set; }
     //public DateTime UltimoPago { get; set; } = DateTime.UtcNow;
-    public DateTime? ExpiracionMembresia { get; set; } 
+    public DateTime? ExpiracionMembresia { get; set; } = DateTime.UtcNow.AddDays(-1);
 
     [NotMapped] public string Dni { get; set; }
     [NotMapped] public DateTime? UltimaAsistencia { get; set; }
@@ -38,15 +38,25 @@ public class Socio : EntityBase, IEncryptableEntity
 
   
     // Métodos de negocio
-    public void AddCredits(int credits, int validityDays)
+    public void AddCredits(int credits, int validityDays, DateTime? nowUtc = null)
     {
         CreditosRestantes += credits;
         TotalCreditosComprados += credits;
 
-        if (ExpiracionMembresia < DateTime.UtcNow || validityDays > 0)
-        {
-            ExpiracionMembresia = DateTime.UtcNow.AddDays(validityDays);
-        }
+        if (validityDays <= 0) return;
+
+        var now = nowUtc ?? DateTime.UtcNow;
+        var baseDate = (ExpiracionMembresia.HasValue && ExpiracionMembresia.Value > now)
+                       ? ExpiracionMembresia.Value
+                       : now;
+
+        ExpiracionMembresia = baseDate.AddDays(validityDays);
+    }
+    public void AplicaCompraReseteando(int credits, DateTime nuevaExpiracionUtc)
+    {
+        CreditosRestantes = credits;                // pisa saldo anterior
+        TotalCreditosComprados += credits;          // (histórico)
+        ExpiracionMembresia = nuevaExpiracionUtc;   // pisa vencimiento anterior
     }
 
     public void HandleDecryption(ICryptoService cryptoService)

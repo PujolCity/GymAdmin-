@@ -4,6 +4,7 @@ using GymAdmin.Domain.Interfaces.Repositories;
 using GymAdmin.Domain.Interfaces.Services;
 using GymAdmin.Domain.Pagination;
 using GymAdmin.Domain.Results;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -40,7 +41,7 @@ public class SocioService : ISocioService
         }
         catch (DbUpdateException ex) when (ex.InnerException?.Message.Contains("UNIQUE constraint failed") == true)
         {
-            _logger.LogWarning(ex, "Intento de duplicado al crear socio {Dni}", socio.Dni);
+            _logger.LogWarning(ex, "Intento de duplicado al crear socio {Dni}", socio.DniEncrypted);
             return Result.Fail("Ya existe un socio con el mismo email o DNI.");
         }
         catch (Exception ex)
@@ -175,5 +176,31 @@ public class SocioService : ISocioService
             .OrderBy(s => s.Apellido)
             .ThenBy(s => s.Nombre)
             .ToList();
+    }
+
+    public async Task<Result> RegistrarAsistenciaAsync(Asistencia asistencia, CancellationToken ct = default)
+    {
+        var socio = await _unitOfWork.SocioRepo.GetByIdAsync(asistencia.SocioId, ct);
+        if (socio is null)
+            return Result.Fail("No existe un socio con el Id.");
+
+        var seUsoCredito = socio.UsarCredito();
+        if (!seUsoCredito)
+            return Result.Fail("El socio no tiene créditos disponibles.");
+
+        asistencia.SeUsoCredito = seUsoCredito;
+        asistencia.Socio = socio;
+        try
+        {
+            await _unitOfWork.AsistenciaRepo.AddAsync(asistencia, ct);
+            _unitOfWork.SocioRepo.Update(socio);
+            await _unitOfWork.CommitAsync(ct);
+            return Result.Ok();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al registrar asistencia para socio {SocioId}", asistencia.SocioId);
+            return Result.Fail("Ocurrió un error al registrar la asistencia.");
+        }
     }
 }

@@ -57,6 +57,7 @@ public partial class App : Application
             await _host.StopAsync();
             _host.Dispose();
         }
+        Serilog.Log.CloseAndFlush();
         base.OnExit(e);
     }
 }

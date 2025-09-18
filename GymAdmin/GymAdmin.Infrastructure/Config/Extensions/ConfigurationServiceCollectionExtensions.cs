@@ -1,8 +1,10 @@
-﻿using GymAdmin.Applications.Interactor.PagosInteractors;
+﻿using GymAdmin.Applications.Interactor.AsistenciaInteractors;
+using GymAdmin.Applications.Interactor.PagosInteractors;
 using GymAdmin.Applications.Interactor.PlanesMembresia;
 using GymAdmin.Applications.Interactor.SociosInteractors;
 using GymAdmin.Domain.Interfaces.Repositories;
 using GymAdmin.Domain.Interfaces.Services;
+using GymAdmin.Infrastructure.Config.FolderConfig;
 using GymAdmin.Infrastructure.Config.InitializationExtensions;
 using GymAdmin.Infrastructure.Config.Options;
 using GymAdmin.Infrastructure.Data;
@@ -21,6 +23,9 @@ public static class ConfigurationServiceCollectionExtensions
 {
     public static IServiceCollection ConfigureDesktopInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
+        services.Configure<PathsConfig>(configuration.GetSection(nameof(PathsConfig)));
+        services.AddSingleton<IAppPaths, AppPaths>();
+
         services.AddLoggingConfiguration(configuration);
         services.AddDatabaseConfiguration(configuration);
         services.AddRepositories();
@@ -28,11 +33,7 @@ public static class ConfigurationServiceCollectionExtensions
         services.AddInteractors();
 
         // Servicio Encriptado
-        services.AddSingleton<ICryptoService>(sp =>
-        {
-            var cryptoService = new AesCryptoService(); // Archivo local donde se guarda/lee el secret
-            return cryptoService;
-        });
+        services.AddSingleton<ICryptoService, AesCryptoService>();
 
         return services;
     }
@@ -51,10 +52,12 @@ public static class ConfigurationServiceCollectionExtensions
         services.AddTransient<IGetMetodosPagoInteractor, GetMetodosPagoInteractor>();
         services.AddTransient<IGetSociosLookupInteractor, GetSociosLookupInteractor>();
         services.AddTransient<ICreatePagoInteractor, CreatePagoInteractor>();
+        services.AddTransient<IAnularPagoInteractor, AnularPagoInteractor>();
+
+        services.AddTransient<ICreateAsistenciaInteractor, CreateAsistenciaInteractor>();
 
         return services;
     }
-
 
     private static IServiceCollection AddServices(this IServiceCollection services)
     {
@@ -70,34 +73,45 @@ public static class ConfigurationServiceCollectionExtensions
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
         services.AddScoped<ISocioRepository, SocioRepository>();
+        services.AddScoped<ITransaction, EfCoreTransaction>();
 
         return services;
     }
 
     private static IServiceCollection AddLoggingConfiguration(this IServiceCollection services, IConfiguration configuration)
     {
-        var serilogConfig = configuration.GetOptions<SerilogConfig>("SerilogConfig");
+        var serilogCfg = configuration.GetOptions<SerilogConfig>(nameof(SerilogConfig));
 
-        var logFolder = Path.GetDirectoryName(serilogConfig.LogFilePath);
-        if (!Directory.Exists(logFolder))
-            Directory.CreateDirectory(logFolder);
+        Serilog.Debugging.SelfLog.Enable(m => System.Diagnostics.Debug.WriteLine("[Serilog] " + m));
 
-        Log.Logger = new LoggerConfiguration()
-         .MinimumLevel.Is(Enum.Parse<LogEventLevel>(serilogConfig.MinimumLevel))
-         .WriteTo.Debug()
-         .WriteTo.Console(outputTemplate: serilogConfig.ConsoleOutputTemplate)
-         .WriteTo.File(
-             path: serilogConfig.LogFilePath,
-             rollingInterval: RollingInterval.Day,
-             retainedFileCountLimit: serilogConfig.RetainedFileCountLimit,
-             outputTemplate: serilogConfig.FileOutputTemplate,
-             shared: true)
-         .CreateLogger();
-
-        services.AddLogging(loggingBuilder =>
+        services.AddSingleton(sp =>
         {
-            loggingBuilder.ClearProviders();
-            loggingBuilder.AddSerilog(dispose: true);
+            var paths = sp.GetRequiredService<IAppPaths>();
+            Directory.CreateDirectory(Path.GetDirectoryName(paths.LogFilePattern)!);
+
+            var serilogCfg = configuration.GetOptions<SerilogConfig>("SerilogConfig");
+            var minLevel = Enum.TryParse<LogEventLevel>(serilogCfg.MinimumLevel, true, out var lvl)
+                ? lvl : LogEventLevel.Information;
+
+            var logger = new LoggerConfiguration()
+                .MinimumLevel.Is(minLevel)
+                .WriteTo.Debug()
+                .WriteTo.File(
+                    path: paths.LogFilePattern,
+                    rollingInterval: RollingInterval.Day,
+                    retainedFileCountLimit: serilogCfg.RetainedFileCountLimit,
+                    outputTemplate: serilogCfg.FileOutputTemplate,
+                    shared: true)
+                .CreateLogger();
+
+            Log.Logger = logger;
+            return logger;
+        });
+
+        services.AddLogging(lb =>
+        {
+            lb.ClearProviders();
+            lb.AddSerilog(Log.Logger, dispose: true); 
         });
 
         return services;
@@ -105,26 +119,20 @@ public static class ConfigurationServiceCollectionExtensions
 
     private static IServiceCollection AddDatabaseConfiguration(this IServiceCollection services, IConfiguration configuration)
     {
-        var sqliteConfig = configuration.GetOptions<SqliteConfig>("SqliteConfig");
-
-        var projectRoot = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\.."));
-
-        var dataFolder = Path.Combine(projectRoot, sqliteConfig.NameFolder);
-        Directory.CreateDirectory(dataFolder);
-
-        var dbPath = Path.Combine(dataFolder, sqliteConfig.NameDataBase);
-        var connectionString = $"Data Source={dbPath}";
-
-        services.AddDbContext<GymAdminDbContext>((serviceProvider, options) =>
+        // SqliteConfig lo podés seguir usando para nombres si querés,
+        // pero la ruta sale de IAppPaths.DbFile
+        services.AddDbContext<GymAdminDbContext>((sp, options) =>
         {
-            options.UseSqlite(connectionString, sqliteOptions =>
+            var paths = sp.GetRequiredService<IAppPaths>();
+            var connectionString = $"Data Source={paths.DbFile}";
+
+            options.UseSqlite(connectionString, sqlite =>
             {
-                sqliteOptions.MigrationsAssembly(typeof(GymAdminDbContext).Assembly.FullName);
+                sqlite.MigrationsAssembly(typeof(GymAdminDbContext).Assembly.FullName);
             });
         });
 
         services.AddScoped<DatabaseInitializer>();
-
         return services;
     }
 }

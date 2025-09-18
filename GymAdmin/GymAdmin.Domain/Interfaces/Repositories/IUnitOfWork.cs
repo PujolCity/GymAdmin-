@@ -14,4 +14,8 @@ public interface IUnitOfWork : IDisposable
 
     Task<int> CommitAsync(CancellationToken ct = default);
     void Rollback();
+
+    Task<ITransaction> BeginTransactionAsync(CancellationToken ct = default);
+    Task<T> ExecuteInTransactionAsync<T>(Func<CancellationToken, Task<T>> work, CancellationToken ct = default);
+    Task ExecuteInTransactionAsync(Func<CancellationToken, Task> work, CancellationToken ct = default);
 }
