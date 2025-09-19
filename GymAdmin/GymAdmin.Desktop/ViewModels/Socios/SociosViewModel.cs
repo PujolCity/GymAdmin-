@@ -11,6 +11,7 @@ using GymAdmin.Desktop.Views.Dialogs;
 using GymAdmin.Domain.Enums;
 using Microsoft.Extensions.DependencyInjection;
 using System.Collections.ObjectModel;
+using System.Windows;
 
 namespace GymAdmin.Desktop.ViewModels.Socios;
 
@@ -376,7 +377,9 @@ public sealed partial class SociosViewModel : ViewModelBase, IDisposable
             Title = title,
             Message = message,
             AcceptText = accept,
-            CancelText = cancel
+            CancelText = cancel,
+            AcceptButtonStyle = App.Current.FindResource("DangerButtonStyle") as System.Windows.Style,
+            CancelButtonStyle = App.Current.FindResource("PrimaryButtonStyle") as System.Windows.Style
         };
 
         var view = new ConfirmDialogView { DataContext = vm };

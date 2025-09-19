@@ -9,7 +9,6 @@ public static class SocioMapper
 {
     public static Socio ToSocio(this SocioCreateDto socioDto)
     {
-
         return new Socio()
         {
             Nombre = socioDto.Nombre,

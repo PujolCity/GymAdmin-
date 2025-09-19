@@ -160,7 +160,7 @@ public class PagosServices : IPagosServices
             if (pago.Estado == EstadoPago.Anulado)
             {
                 _logger.LogDebug("Pago ya estaba anulado. PagoId={PagoId}", pagoId);
-                await tx.CommitAsync(ct); // idempotente
+                await tx.CommitAsync(ct); 
                 return Result.Ok();
             }
 
@@ -177,7 +177,7 @@ public class PagosServices : IPagosServices
                 _logger.LogWarning("Saldo insuficiente para anular. SocioId={SocioId}, Saldo={Saldo}, ARestar={ARestar}",
                     socio.Id, saldoAntes, aRestar);
                 await tx.RollbackAsync(ct);
-                return Result.Fail("No se puede anular: ya se consumieron créditos de ese pago.");
+                return Result.Fail($"No se puede anular: {pago.Socio.Nombre} {pago.Socio.Apellido} ya consumio créditos de ese pago.");
             }
 
             // 3) Revertir saldo

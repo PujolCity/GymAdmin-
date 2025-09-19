@@ -9,7 +9,7 @@ namespace GymAdmin.Applications.Mapppers;
 public static class PagosMapper
 {
     public static MetodoPagoDto ToMetodoPagoDto(this MetodoPago metodoPago)
-    { 
+    {
         return new MetodoPagoDto
         {
             Id = metodoPago.Id,
@@ -17,7 +17,7 @@ public static class PagosMapper
         };
     }
 
-    public static Pagos ToPagos (this PagoCreateDto pagoDto)
+    public static Pagos ToPagos(this PagoCreateDto pagoDto)
     {
         return new Pagos
         {
@@ -33,7 +33,7 @@ public static class PagosMapper
         };
     }
 
-    public static Pagos ToPagos (this BaseDeleteRequest baseDeleteRequest)
+    public static Pagos ToPagos(this BaseDeleteRequest baseDeleteRequest)
     {
         return new Pagos
         {

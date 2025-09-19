@@ -80,47 +80,65 @@ public static class ConfigurationServiceCollectionExtensions
 
     private static IServiceCollection AddLoggingConfiguration(this IServiceCollection services, IConfiguration configuration)
     {
-        var serilogCfg = configuration.GetOptions<SerilogConfig>(nameof(SerilogConfig));
-
         Serilog.Debugging.SelfLog.Enable(m => System.Diagnostics.Debug.WriteLine("[Serilog] " + m));
 
-        services.AddSingleton(sp =>
-        {
-            var paths = sp.GetRequiredService<IAppPaths>();
-            Directory.CreateDirectory(Path.GetDirectoryName(paths.LogFilePattern)!);
+        // 1) Leer config
+        var serilogCfg = configuration.GetSection("SerilogConfig").Get<SerilogConfig>();
+        var pathsCfg = configuration.GetSection("PathsConfig").Get<PathsConfig>();
 
-            var serilogCfg = configuration.GetOptions<SerilogConfig>("SerilogConfig");
-            var minLevel = Enum.TryParse<LogEventLevel>(serilogCfg.MinimumLevel, true, out var lvl)
-                ? lvl : LogEventLevel.Information;
+        // 2) Armar ruta absoluta: %MyDocuments%\GymAdmin\Logs\log-.txt
+        var root = ExpandRoot(pathsCfg.Root); 
+        var logsDir = Path.Combine(root, pathsCfg.LogsDir ?? "Logs");
+        Directory.CreateDirectory(logsDir);
+        var logFilePattern = Path.Combine(logsDir, pathsCfg.LogFilePattern ?? "log-.txt");
 
-            var logger = new LoggerConfiguration()
-                .MinimumLevel.Is(minLevel)
-                .WriteTo.Debug()
-                .WriteTo.File(
-                    path: paths.LogFilePattern,
-                    rollingInterval: RollingInterval.Day,
-                    retainedFileCountLimit: serilogCfg.RetainedFileCountLimit,
-                    outputTemplate: serilogCfg.FileOutputTemplate,
-                    shared: true)
-                .CreateLogger();
+        // 3) Nivel mínimo
+        var minLevel = Enum.TryParse<Serilog.Events.LogEventLevel>(serilogCfg.MinimumLevel, true, out var lvl)
+            ? lvl : Serilog.Events.LogEventLevel.Information;
 
-            Log.Logger = logger;
-            return logger;
-        });
+        // 4) Crear logger AHORA (no en una lambda diferida)
+        var logger = new LoggerConfiguration()
+            .MinimumLevel.Is(minLevel)
+            .WriteTo.Debug(outputTemplate: serilogCfg.ConsoleOutputTemplate)
+            .WriteTo.File(
+                path: logFilePattern,
+                rollingInterval: RollingInterval.Day,
+                retainedFileCountLimit: serilogCfg.RetainedFileCountLimit,
+                outputTemplate: serilogCfg.FileOutputTemplate,
+                shared: true)
+            .CreateLogger();
+
+        Log.Logger = logger;                
+        services.AddSingleton<Serilog.ILogger>(logger);
 
         services.AddLogging(lb =>
         {
             lb.ClearProviders();
-            lb.AddSerilog(Log.Logger, dispose: true); 
+            lb.AddSerilog(Log.Logger, dispose: true);
         });
+
+        Log.Information("Logger inicializado. Archivo: {LogFile}", logFilePattern);
 
         return services;
     }
 
+    private static string ExpandRoot(string root)
+    {
+        if (string.IsNullOrWhiteSpace(root))
+            return Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+
+        if (root.StartsWith("%MyDocuments%", StringComparison.OrdinalIgnoreCase))
+        {
+            var docs = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            var tail = root.Substring("%MyDocuments%".Length).TrimStart('\\', '/');
+            return Path.Combine(docs, tail);
+        }
+
+        return Path.GetFullPath(Environment.ExpandEnvironmentVariables(root));
+    }
+
     private static IServiceCollection AddDatabaseConfiguration(this IServiceCollection services, IConfiguration configuration)
     {
-        // SqliteConfig lo podés seguir usando para nombres si querés,
-        // pero la ruta sale de IAppPaths.DbFile
         services.AddDbContext<GymAdminDbContext>((sp, options) =>
         {
             var paths = sp.GetRequiredService<IAppPaths>();

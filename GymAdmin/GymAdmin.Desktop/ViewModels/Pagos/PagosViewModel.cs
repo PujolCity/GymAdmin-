@@ -8,11 +8,15 @@ using GymAdmin.Desktop.Views.Dialogs;
 using GymAdmin.Domain.Enums;
 using Microsoft.Extensions.DependencyInjection;
 using System.Collections.ObjectModel;
+using System.Windows;
 
 namespace GymAdmin.Desktop.ViewModels.Pagos;
 
 public partial class PagosViewModel : ViewModelBase, IDisposable
 {
+    private const string COLOR_ROJO = "DangerButtonStyle";
+    private const string COLOR_PRIMARIO = "PrimaryButtonStyle";
+
     private readonly IGetPagosInteractor _getPagosInteractor;
     private readonly IAnularPagoInteractor _anularPagoInteractor;
     private readonly IGetMetodosPagoInteractor _getMetodosPago;
@@ -29,10 +33,10 @@ public partial class PagosViewModel : ViewModelBase, IDisposable
     [ObservableProperty] private DateTime? fechaDesde = DateTime.Today.AddDays(-7);
     [ObservableProperty] private DateTime? fechaHasta = DateTime.Today;
     [ObservableProperty] private MetodoPagoDto? metodoSeleccionado;
-    
-    [ObservableProperty] 
+
+    [ObservableProperty]
     private string estadoSeleccionado = "Todos";
-    
+
     [ObservableProperty]
     private string sortBy = "FECHA";
 
@@ -67,7 +71,7 @@ public partial class PagosViewModel : ViewModelBase, IDisposable
 
     public int DisplayFrom => Math.Min(((PageNumber - 1) * PageSize) + 1, Math.Max(1, TotalCount));
     public int DisplayTo => Math.Min(PageNumber * PageSize, TotalCount);
-    
+
     [ObservableProperty] private PagoDto? pagoSeleccionado;
     [ObservableProperty] private bool isDialogOpen;
     [ObservableProperty] private object? dialogContent;
@@ -211,29 +215,44 @@ public partial class PagosViewModel : ViewModelBase, IDisposable
     }
 
     [RelayCommand(CanExecute = nameof(CanSimpleAction))]
-    private async Task AnularPago()
+    private async Task AnularPago(PagoDto? pago)
     {
-        if (PagoSeleccionado is null) return;
+        var target = pago ?? PagoSeleccionado;
+        if (target is null) return;
 
         var ok = await ConfirmAsync("Anular pago",
-            $"¿Querés anular el pago #{PagoSeleccionado.Id} por {PagoSeleccionado.Precio:C}?\n" +
-            $"Esta acción no elimina, sólo cambia el estado a Anulado.");
+            $"¿Querés anular el pago de {target.SocioNombre} de {target.Precio:C}?\n" +
+            $"Esta acción no elimina, sólo cambia el estado a Anulado.", "Anular", "Cancelar", COLOR_ROJO, COLOR_PRIMARIO);
 
         if (!ok) return;
 
         try
         {
             IsBusy = true;
-            var result = await _anularPagoInteractor.ExecuteAsync(PagoSeleccionado, CancellationToken.None);
-            if (result.IsSuccess) await LoadAsync();
-            else ErrorMessage = string.Join(Environment.NewLine, result.Errors);
+            ErrorMessage = null;
+
+            var result = await _anularPagoInteractor.ExecuteAsync(target, CancellationToken.None);
+
+            if (result.IsSuccess)
+            {
+                await LoadAsync();
+            }
+            else
+            {
+                var motivo = string.Join(Environment.NewLine, result.Errors);
+                ErrorMessage = string.IsNullOrWhiteSpace(motivo)
+                    ? "No se pudo anular el pago por un error desconocido."
+                    : motivo;
+
+                await ConfirmAsync("No se pudo anular", ErrorMessage, "Aceptar", string.Empty, COLOR_PRIMARIO, COLOR_ROJO, false);
+            }
         }
         finally
         {
             IsBusy = false;
         }
     }
-    
+
     [RelayCommand(CanExecute = nameof(CanSimpleAction))]
     private void LimpiarFiltro()
     {
@@ -242,9 +261,19 @@ public partial class PagosViewModel : ViewModelBase, IDisposable
     }
     private void OpenDialog(object content) { DialogContent = content; IsDialogOpen = true; }
 
-    private async Task<bool> ConfirmAsync(string title, string msg)
+    private async Task<bool> ConfirmAsync(string title, string msg, string acceptText, string cancelText, string acceptColor = COLOR_ROJO, string cancelColor = COLOR_PRIMARIO, bool showCancel = true)
     {
-        var vm = new ConfirmDialogViewModel { Title = title, Message = msg, AcceptText = "Anular", CancelText = "Cancelar" };
+        var vm = new ConfirmDialogViewModel
+        {
+            Title = title,
+            Message = msg,
+            AcceptText = acceptText,
+            CancelText = cancelText,
+            AcceptButtonStyle = (Style)Application.Current.FindResource(acceptColor),
+            CancelButtonStyle = (Style)Application.Current.FindResource(cancelColor),
+            ShowCancelButton = showCancel
+        };
+
         var view = new ConfirmDialogView { DataContext = vm };
         OpenDialog(view);
         var res = await vm.Task;

@@ -46,7 +46,7 @@ public class SocioService : ISocioService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error al crear socio {Dni}", socio.Dni);
+            _logger.LogError(ex, "Error al crear socio {Dni}", socio.DniEncrypted);
             return Result.Fail("Ocurrió un error al crear el socio.");
         }
     }
