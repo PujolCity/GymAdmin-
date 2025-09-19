@@ -1,0 +1,96 @@
+﻿<UserControl x:Class="GymAdmin.Desktop.Views.Dialogs.VerPagoDialog"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:GymAdmin.Desktop.Views.Dialogs"
+             xmlns:viewmodels="clr-namespace:GymAdmin.Desktop.ViewModels.Pagos"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <Border Background="{StaticResource BackgroundWhiteBrush}"
+            CornerRadius="10" Padding="18"
+            BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
+            Width="520">
+        <StackPanel>
+
+            <!-- Header -->
+            <DockPanel Margin="0,0,0,8">
+                <TextBlock Text="Detalle del Pago"
+                           FontSize="18" FontWeight="Bold"
+                           VerticalAlignment="Center"/>
+                <Border DockPanel.Dock="Right"
+                        Background="{Binding Estado, Converter={StaticResource PagoStatusToColorConverter}}"
+                        CornerRadius="10"
+                        Padding="6,2"              
+                        Margin="8,0,0,0"
+                        VerticalAlignment="Center"
+                        Width="200">
+                    <TextBlock Text="{Binding Estado}"
+                               HorizontalAlignment="Center"
+                               FontSize="12"         
+                               FontWeight="SemiBold"
+                               Foreground="White"/>
+                </Border>
+            </DockPanel>
+
+            <!-- Grid de datos -->
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="180"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Izquierda: etiquetas -->
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="Nº de pago" Style="{StaticResource LabelMuted}"/>
+                    <TextBlock Text="Socio" Style="{StaticResource LabelMuted}"/>
+                    <TextBlock Text="Plan" Style="{StaticResource LabelMuted}"/>
+                    <TextBlock Text="Método" Style="{StaticResource LabelMuted}"/>
+                    <TextBlock Text="Monto" Style="{StaticResource LabelMuted}"/>
+                    <TextBlock Text="Fecha de pago" Style="{StaticResource LabelMuted}"/>
+                    <TextBlock Text="Créditos asignados" Style="{StaticResource LabelMuted}"/>
+                    <TextBlock Text="Vencimiento" Style="{StaticResource LabelMuted}"/>
+                    <TextBlock Text="Observaciones" Style="{StaticResource LabelMuted}"/>
+                </StackPanel>
+
+                <!-- Derecha: valores -->
+                <StackPanel Grid.Column="1">
+                    <TextBlock Text="{Binding Id}"/>
+
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{Binding SocioNombre}"/>
+                        <!-- (opcional) botón ir a socio -->
+                        <!--<Button Content="Abrir" Command="{Binding OpenSocioCommand}" />-->
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" >
+                        <TextBlock Text="{Binding PlanNombre}"/>
+                    </StackPanel>
+
+                    <TextBlock Text="{Binding MetodoPago}"/>
+
+                    <TextBlock>
+                        <Run Text="{Binding Precio, StringFormat={}{0:C}}"/>
+                        <Run Text=" ARS" Foreground="{StaticResource TextSecondaryBrush}"/>
+                    </TextBlock>
+
+                    <TextBlock Text="{Binding FechaPagoLocal, StringFormat={}{0:dd/MM/yyyy HH:mm}}"/>
+
+                    <TextBlock Text="{Binding CreditosAsignados}"/>
+
+                    <TextBlock Text="{Binding FechaVencimientoLocal, StringFormat={}{0:dd/MM/yyyy}}"/>
+
+                    <TextBlock Text="{Binding Observaciones}" TextWrapping="Wrap" />
+                </StackPanel>
+            </Grid>
+
+            <!-- Acciones -->
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
+                <!--<Button Content="Imprimir" Style="{StaticResource SecondaryButtonStyle}" Command="{Binding PrintCommand}"/>-->
+                <!--<Button Content="Copiar ID" Style="{StaticResource SecondaryButtonStyle}" Command="{Binding CopyIdCommand}"/>-->
+                <Button Content="Cerrar" Style="{StaticResource PrimaryButtonStyle}"
+                        Command="{Binding CancelarCommand}"/>
+            </StackPanel>
+        </StackPanel>
+    </Border>
+</UserControl>

@@ -1,4 +1,5 @@
 ﻿using GymAdmin.Domain.Interfaces.Services;
+using GymAdmin.Infrastructure.Config.FolderConfig;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -10,13 +11,9 @@ public class AesCryptoService : ICryptoService
     private readonly byte[] _key;
     private readonly string _secretFilePath;
 
-    public AesCryptoService()
+    public AesCryptoService(IAppPaths paths)
     {
-        _secretFilePath = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "GymAdmin",
-            "secret.json");
-
+        _secretFilePath = paths.SecretFile;
         Directory.CreateDirectory(Path.GetDirectoryName(_secretFilePath)!);
 
         if (!File.Exists(_secretFilePath))

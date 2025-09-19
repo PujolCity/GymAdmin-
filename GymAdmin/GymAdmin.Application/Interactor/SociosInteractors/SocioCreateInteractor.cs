@@ -29,7 +29,7 @@ public class SocioCreateInteractor : ISocioCreateInteractor
         var result = await _socioService.CreateAsync(socio);
         if (result.IsSuccess)
             return Result.Ok();
-        else
-            return Result.Fail(result.Errors);
+
+        return Result.Fail(result.Errors);
     }
 }

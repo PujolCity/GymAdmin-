@@ -10,7 +10,12 @@ public interface IUnitOfWork : IDisposable
     IRepository<User> UserRepo { get; }
     IRepository<Asistencia> AsistenciaRepo { get; }
     IRepository<SystemConfig> SystemConfigRepo { get; }
+    IRepository<MetodoPago> MetodoPagoRepo { get; }
 
     Task<int> CommitAsync(CancellationToken ct = default);
     void Rollback();
+
+    Task<ITransaction> BeginTransactionAsync(CancellationToken ct = default);
+    Task<T> ExecuteInTransactionAsync<T>(Func<CancellationToken, Task<T>> work, CancellationToken ct = default);
+    Task ExecuteInTransactionAsync(Func<CancellationToken, Task> work, CancellationToken ct = default);
 }

@@ -1,12 +1,17 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using GymAdmin.Applications.DTOs.Asistencia;
+using GymAdmin.Applications.DTOs.PagosDto;
 using GymAdmin.Applications.DTOs.SociosDto;
+using GymAdmin.Applications.Interactor.AsistenciaInteractors;
 using GymAdmin.Applications.Interactor.SociosInteractors;
 using GymAdmin.Desktop.ViewModels.Dialogs;
+using GymAdmin.Desktop.ViewModels.Pagos;
 using GymAdmin.Desktop.Views.Dialogs;
 using GymAdmin.Domain.Enums;
 using Microsoft.Extensions.DependencyInjection;
 using System.Collections.ObjectModel;
+using System.Windows;
 
 namespace GymAdmin.Desktop.ViewModels.Socios;
 
@@ -14,6 +19,8 @@ public sealed partial class SociosViewModel : ViewModelBase, IDisposable
 {
     private readonly IGetAllSociosInteractor _getAllSociosInteractor;
     private readonly IDeleteSocioInteractor _deleteSocioInteractor;
+    private readonly ICreateAsistenciaInteractor _createAsistenciaInteractor;
+
     private CancellationTokenSource? _cts;
     private readonly IServiceProvider _sp;
 
@@ -73,7 +80,7 @@ public sealed partial class SociosViewModel : ViewModelBase, IDisposable
     private SocioDto? socioSeleccionado;
     partial void OnSocioSeleccionadoChanged(SocioDto? value)
     {
-        
+
     }
 
     [ObservableProperty]
@@ -82,9 +89,10 @@ public sealed partial class SociosViewModel : ViewModelBase, IDisposable
     [ObservableProperty]
     private bool isDialogOpen;
 
-    public SociosViewModel(IGetAllSociosInteractor getAll, 
-        IServiceProvider sp, 
-        IDeleteSocioInteractor deleteSocioInteractor)
+    public SociosViewModel(IGetAllSociosInteractor getAll,
+        IServiceProvider sp,
+        IDeleteSocioInteractor deleteSocioInteractor,
+        ICreateAsistenciaInteractor createAsistenciaInteractor)
     {
         _getAllSociosInteractor = getAll;
         _deleteSocioInteractor = deleteSocioInteractor;
@@ -100,6 +108,7 @@ public sealed partial class SociosViewModel : ViewModelBase, IDisposable
                            GoLastPageCommand, NuevoSocioCommand, EditarSocioCommand,
                            EliminarSocioCommand, RegistrarPagoCommand, RegistrarAsistenciaCommand,
                            LimpiarFiltroCommand, ExportarCommand);
+        _createAsistenciaInteractor = createAsistenciaInteractor;
     }
 
     partial void OnFiltroBusquedaChanged(string value) => _ = DebouncedReloadAsync();
@@ -202,13 +211,13 @@ public sealed partial class SociosViewModel : ViewModelBase, IDisposable
 
     private bool CanSimpleAction() => !IsBusy;
 
-    [RelayCommand(CanExecute = nameof(CanRowAction))] 
-    private async Task EditarSocio() 
-    { 
-        /* TODO */ 
+    [RelayCommand(CanExecute = nameof(CanRowAction))]
+    private async Task EditarSocio()
+    {
+        /* TODO */
     }
 
-    
+
     [RelayCommand(CanExecute = nameof(CanSimpleAction))]
     private async Task EliminarSocio()
     {
@@ -237,8 +246,88 @@ public sealed partial class SociosViewModel : ViewModelBase, IDisposable
         }
     }
 
-    [RelayCommand(CanExecute = nameof(CanRowAction))] private void RegistrarPago() { /* TODO */ }
-    [RelayCommand(CanExecute = nameof(CanRowAction))] private void RegistrarAsistencia() { /* TODO */ }
+    [RelayCommand(CanExecute = nameof(CanSimpleAction))]
+    private void RegistrarPago()
+    {
+        var vm = _sp.GetRequiredService<AddPagoViewModel>();
+     
+        SocioLookupDto? socio = null;
+        
+        if (socioSeleccionado != null)
+        {
+            socio = new SocioLookupDto
+            {
+                Dni = SocioSeleccionado?.Dni,
+                Id = SocioSeleccionado?.Id ?? 0,
+                NombreCompleto = SocioSeleccionado?.NombreCompleto
+            };
+        }
+
+        vm.Initialize(socio);
+
+        vm.CloseRequested += async () =>
+        {
+            IsDialogOpen = false; DialogContent = null;
+            await LoadAsync();
+        };
+
+        OpenDialog(new AddPagoDialog { DataContext = vm });
+    }
+
+    [RelayCommand(CanExecute = nameof(CanSimpleAction))]
+    private async Task RegistrarAsistencia() 
+    { 
+        if (SocioSeleccionado is null) return;
+
+        if (SocioSeleccionado.Estado != "Activo")
+        {
+            await ShowConfirmAsync(
+                "Registrar Asistencia",
+                $"No se puede registrar la asistencia de un socio inactivo.\n" +
+                $"Por favor, primero activá el estado del socio \"{SocioSeleccionado.NombreCompleto}\".",
+                accept: "Aceptar",
+                cancel: "Cancelar");
+            return;
+        }
+        if (SocioSeleccionado.CreditosRestantes <= 0)
+        {
+            await ShowConfirmAsync(
+                "Registrar Asistencia",
+                $"El socio \"{SocioSeleccionado.NombreCompleto}\" no tiene créditos disponibles.\n" +
+                $"Por favor, primero cargá créditos al socio.",
+                accept: "Aceptar",
+                cancel: "Cancelar");
+            return;
+        }
+
+        var confirm = await ShowConfirmAsync(
+        "Registrar Asistencia",
+        $"¿Querés registrar una asistencia de \"{SocioSeleccionado.NombreCompleto}\"? \n",
+        accept: "Registrar",
+        cancel: "Cancelar");
+
+        if (!confirm) return;
+        try
+        {
+            IsBusy = true;
+            var asisitenciaDto = new CreateAsistenciaDto
+            {
+                IdSocio = SocioSeleccionado.Id,
+                Fecha = DateTime.Now
+            };
+
+            var result = await _createAsistenciaInteractor.ExecuteAsync(asisitenciaDto, CancellationToken.None);
+            if (result.IsSuccess)
+                await LoadAsync();
+            else
+                ErrorMessage = string.Join(Environment.NewLine, result.Errors);
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
     private bool CanRowAction() => !IsBusy && SocioSeleccionado is not null;
 
     [RelayCommand(CanExecute = nameof(CanSimpleAction))]
@@ -288,7 +377,9 @@ public sealed partial class SociosViewModel : ViewModelBase, IDisposable
             Title = title,
             Message = message,
             AcceptText = accept,
-            CancelText = cancel
+            CancelText = cancel,
+            AcceptButtonStyle = App.Current.FindResource("DangerButtonStyle") as System.Windows.Style,
+            CancelButtonStyle = App.Current.FindResource("PrimaryButtonStyle") as System.Windows.Style
         };
 
         var view = new ConfirmDialogView { DataContext = vm };

@@ -2,6 +2,7 @@
 using CommunityToolkit.Mvvm.Input;
 using FontAwesome.Sharp;
 using GymAdmin.Desktop.ViewModels.Membresias;
+using GymAdmin.Desktop.ViewModels.Pagos;
 using GymAdmin.Desktop.ViewModels.Socios;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -11,7 +12,6 @@ public partial class MainViewModel : ViewModelBase
 {
     private readonly IServiceProvider _sp;
 
-    // Propiedades observables
     [ObservableProperty] private ViewModelBase _currentChildView;
     [ObservableProperty] private string _caption;
     [ObservableProperty] private IconChar _icon;
@@ -36,14 +36,6 @@ public partial class MainViewModel : ViewModelBase
         CurrentChildView = _sp.GetRequiredService<SociosViewModel>();
         Caption = "Socios";
         Icon = IconChar.UserCircle;
-    }
-
-    [RelayCommand]
-    private void ShowMembresiasView()
-    {
-        CurrentChildView = _sp.GetRequiredService<MembresiasViewModel>();
-        Caption = "Membresías";
-        Icon = IconChar.CalendarCheck;
     }
 
     [RelayCommand]

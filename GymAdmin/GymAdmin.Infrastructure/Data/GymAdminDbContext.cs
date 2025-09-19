@@ -1,4 +1,5 @@
 ﻿using GymAdmin.Domain.Entities;
+using GymAdmin.Domain.Enums;
 using GymAdmin.Domain.Interfaces.Services;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,7 +12,7 @@ public class GymAdminDbContext : DbContext
 {
     public ICryptoService _cryptoService;
 
-    public GymAdminDbContext(DbContextOptions<GymAdminDbContext> options, 
+    public GymAdminDbContext(DbContextOptions<GymAdminDbContext> options,
         ICryptoService cryptoService)
            : base(options)
     {
@@ -25,17 +26,35 @@ public class GymAdminDbContext : DbContext
     public DbSet<Asistencia> Asistencias { get; set; }
     public DbSet<SystemConfig> SystemConfigs { get; set; }
     public DbSet<User> Users { get; set; }
+    public DbSet<MetodoPago> MetodosPago { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<MetodoPago>(entity =>
+        {
+            entity.HasQueryFilter(mp => !mp.IsDeleted);
+            entity.HasKey(mp => mp.Id);
+
+            entity.Property(mp => mp.Nombre)
+                  .IsRequired()
+                  .HasMaxLength(60);
+
+            entity.Property(mp => mp.IsActive)
+                  .HasDefaultValue(true);
+
+            entity.HasIndex(mp => mp.Nombre)
+                  .IsUnique();
+
+            // (Opcional) seed inicial lo haremos en la migración para poder usar SQL de backfill
+        });
 
         // Configuración de Socio
         modelBuilder.Entity<Socio>(entity =>
         {
             entity.HasQueryFilter(m => !m.IsDeleted);
             entity.HasKey(m => m.Id);
-
 
             entity.Property(m => m.Nombre)
                 .IsRequired()
@@ -46,7 +65,7 @@ public class GymAdminDbContext : DbContext
                 .HasMaxLength(50);
 
             entity.Property(e => e.DniEncrypted).IsRequired();
-            
+
             entity.Property(m => m.FechaRegistro)
                 .IsRequired();
 
@@ -56,8 +75,7 @@ public class GymAdminDbContext : DbContext
             entity.Property(m => m.TotalCreditosComprados)
                 .HasDefaultValue(0);
 
-            entity.Property(m => m.ExpiracionMembresia)
-                .IsRequired();
+            entity.Property(m => m.ExpiracionMembresia);
 
             // Índices únicos
             entity.HasIndex(m => m.DniEncrypted)
@@ -98,9 +116,6 @@ public class GymAdminDbContext : DbContext
             entity.Property(pm => pm.DiasValidez)
                 .IsRequired();
 
-            entity.Property(pm => pm.DiasPorSemana)
-                .IsRequired();
-
             entity.Property(pm => pm.IsActive)
                 .HasDefaultValue(true);
         });
@@ -118,9 +133,10 @@ public class GymAdminDbContext : DbContext
             entity.Property(p => p.FechaPago)
                 .IsRequired();
 
-            entity.Property(p => p.MetodoPago)
-                .IsRequired()
-                .HasMaxLength(50);
+            entity.Property(p => p.Estado)
+                  .HasConversion<int>()
+                  .HasDefaultValue(EstadoPago.Pagado)
+                  .IsRequired();
 
             entity.Property(p => p.Observaciones)
                 .HasMaxLength(500);
@@ -132,6 +148,11 @@ public class GymAdminDbContext : DbContext
                 .IsRequired();
 
             // Relaciones
+            entity.HasOne(p => p.MetodoPagoRef)
+                  .WithMany(mp => mp.Pagos)
+                  .HasForeignKey(p => p.MetodoPagoId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
             entity.HasOne(p => p.Socio)
                 .WithMany(m => m.Pagos)
                 .HasForeignKey(p => p.SocioId)
@@ -141,6 +162,10 @@ public class GymAdminDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(p => p.PlanMembresiaId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(p => p.FechaPago);
+            entity.HasIndex(p => p.Estado);
+            entity.HasIndex(p => new { p.FechaPago, p.Estado });
         });
 
         // Configuración de Asistencia

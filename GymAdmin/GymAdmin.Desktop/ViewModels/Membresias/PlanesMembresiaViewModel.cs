@@ -355,7 +355,9 @@ public partial class PlanesMembresiaViewModel : ViewModelBase, IDisposable
             Title = title,
             Message = message,
             AcceptText = accept,
-            CancelText = cancel
+            CancelText = cancel,
+            AcceptButtonStyle = App.Current.FindResource("DangerButtonStyle") as System.Windows.Style,
+            CancelButtonStyle = App.Current.FindResource("PrimaryButtonStyle") as System.Windows.Style
         };
 
         var view = new ConfirmDialogView { DataContext = vm };

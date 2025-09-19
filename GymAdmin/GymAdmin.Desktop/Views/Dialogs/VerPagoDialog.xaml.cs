@@ -13,13 +13,13 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace GymAdmin.Desktop.Views;
+namespace GymAdmin.Desktop.Views.Dialogs;
 /// <summary>
-/// Lógica de interacción para MembresiasView.xaml
+/// Lógica de interacción para VerPagoDialog.xaml
 /// </summary>
-public partial class MembresiasView : UserControl
+public partial class VerPagoDialog : UserControl
 {
-    public MembresiasView()
+    public VerPagoDialog()
     {
         InitializeComponent();
     }

@@ -3,8 +3,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:viewmodels="clr-namespace:GymAdmin.Desktop.ViewModels.Socios"
              xmlns:fa="http://schemas.awesome.incremented/wpf/xaml/fontawesome.sharp"
+             xmlns:viewmodels="clr-namespace:GymAdmin.Desktop.ViewModels.Socios"
              mc:Ignorable="d" 
              Background="Transparent"
              SnapsToDevicePixels="True"
@@ -117,8 +117,7 @@
 
                         <DataGridTextColumn Header="DNI"
                                             Binding="{Binding Dni}"
-                                            Width="Auto"
-                                            MinWidth="110"
+                                            Width="110"
                                             SortMemberPath="{x:Null}"
                                             CanUserSort="False">
                             <DataGridTextColumn.ElementStyle>
@@ -127,7 +126,7 @@
                         </DataGridTextColumn>
                         <DataGridTextColumn Header="APELLIDO y NOMBRE" 
                                             Binding="{Binding NombreCompleto}" 
-                                            Width="Auto" MinWidth="260" SortMemberPath="NombreCompleto">
+                                            Width="190" SortMemberPath="NombreCompleto">
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock" 
                                        BasedOn="{StaticResource OnlyVerticalCenteredCellText}"/>
@@ -153,9 +152,18 @@
                             </DataGridTextColumn.ElementStyle>
                         </DataGridTextColumn>
 
+                        <DataGridTextColumn Header="CRED. RESTANTES" Binding="{Binding CreditosRestantes}" 
+                                            Width="Auto" MinWidth="30"
+                                            SortMemberPath="{x:Null}"
+                                            CanUserSort="False">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock" BasedOn="{StaticResource CenteredCellText}" />
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                        
                         <DataGridTextColumn Header="ÚLTIMA ASISTENCIA" 
-                                            Binding="{Binding UltimaAsistencia, StringFormat={}{0:dd/MM/yyyy}}" 
-                                            Width="Auto" MinWidth="150" SortMemberPath="UltimaAsistencia">
+                                            Binding="{Binding UltimaAsistencia, StringFormat={}{0:dd/MM/yyyy HH:ss}}" 
+                                            Width="130" SortMemberPath="UltimaAsistencia">
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock" BasedOn="{StaticResource CenteredCellText}" />
                             </DataGridTextColumn.ElementStyle>

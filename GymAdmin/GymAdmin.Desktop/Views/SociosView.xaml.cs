@@ -76,7 +76,7 @@ public partial class SociosView : UserControl
         }));
     }
 
-    private void OnUnloaded(object sender, RoutedEventArgs e) // 👈 nuevo
+    private void OnUnloaded(object sender, RoutedEventArgs e) 
     {
         if (DataContext is SociosViewModel vm)
             vm.PropertyChanged -= OnViewModelPropertyChanged;
