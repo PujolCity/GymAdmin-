@@ -25,5 +25,7 @@
                       ShadowDepth="2"
                       Opacity="0.5"
                       Direction="270"/>
-
+    <Style x:Key="LabelMuted" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
+    </Style>
 </ResourceDictionary>

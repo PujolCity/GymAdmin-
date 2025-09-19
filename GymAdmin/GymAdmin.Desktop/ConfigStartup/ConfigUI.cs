@@ -29,6 +29,7 @@ public static class ConfigUI
         services.AddTransient<AddEditPlanViewModel>();
         services.AddTransient<ConfirmDialogViewModel>();
         services.AddTransient<AddPagoViewModel>();
+        services.AddTransient<VerPagoViewModel>();
 
         return services;
     }

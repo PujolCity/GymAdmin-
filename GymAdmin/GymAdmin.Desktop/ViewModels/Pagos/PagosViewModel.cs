@@ -205,13 +205,21 @@ public partial class PagosViewModel : ViewModelBase, IDisposable
     }
 
     [RelayCommand(CanExecute = nameof(CanSimpleAction))]
-    private void VerPago()
+    private void VerPago(PagoDto? pago)
     {
-        //if (PagoSeleccionado is null) return;
-        //var vm = _sp.GetRequiredService<ViewPaymentViewModel>();
-        //vm.Load(PagoSeleccionado);
-        //vm.CloseRequested += () => { IsDialogOpen = false; DialogContent = null; };
-        //OpenDialog(new ViewPaymentDialog { DataContext = vm });
+        var dto = pago ?? PagoSeleccionado;
+        if (dto is null) return;
+
+        var vm = _sp.GetRequiredService<VerPagoViewModel>();
+        vm.Load(dto);
+        vm.CloseRequested += () =>
+        {
+            IsDialogOpen = false;
+            DialogContent = null;
+        };
+
+        var view = new VerPagoDialog { DataContext = vm };
+        OpenDialog(view);
     }
 
     [RelayCommand(CanExecute = nameof(CanSimpleAction))]
