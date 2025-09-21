@@ -1,0 +1,51 @@
+﻿<UserControl x:Class="GymAdmin.Desktop.Views.Dialogs.EditAsistenciaDialog"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:GymAdmin.Desktop.Views.Dialogs"
+             xmlns:viewModels="clr-namespace:GymAdmin.Desktop.ViewModels.Asistencia"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800"
+             xmlns:behaviors="clr-namespace:GymAdmin.Desktop.Views.Behaviors">
+
+    <Border Background="{StaticResource BackgroundWhiteBrush}"
+          CornerRadius="10" Padding="18"
+          BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
+          Width="420">
+        <StackPanel>
+            <TextBlock Text="{Binding Title}" FontSize="18" FontWeight="Bold" Margin="0,0,0,10"/>
+
+            <Border Background="#FFfdecea" BorderBrush="#FFf5c2c7" BorderThickness="1" CornerRadius="6"
+              Padding="8" Margin="0 0 0 8"
+              Visibility="{Binding ErrorMessage, Converter={StaticResource NullOrEmptyToVisibilityConverter}}">
+                <TextBlock Text="{Binding ErrorMessage}" Foreground="#FF58151c" />
+            </Border>
+
+            <!-- Fecha -->
+            <TextBlock Text="Fecha" Style="{StaticResource LabelMuted}" />
+            <DatePicker
+                    SelectedDate="{Binding EntradaDate, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
+                    behaviors:DateMaskBehavior.IsEnabled="True"
+                    behaviors:DateMaskBehavior.Format="dd/MM/yyyy"/>
+
+            <!-- Hora -->
+            <TextBlock Text="Hora (HH:mm)" Style="{StaticResource LabelMuted}" Margin="0,8,0,0"/>
+            <TextBox
+                Text="{Binding EntradaTimeText, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
+                behaviors:TimeMaskBehavior.IsEnabled="True"/>
+
+            <!-- Observaciones -->
+            <TextBlock Text="Observaciones" Style="{StaticResource LabelMuted}" Margin="0,8,0,0"/>
+            <TextBox Text="{Binding Observaciones}" AcceptsReturn="True" TextWrapping="Wrap" Height="80"/>
+
+            <!-- Acciones -->
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+                <Button Content="Cancelar" Style="{StaticResource SecondaryButtonStyle}"
+                Command="{Binding CancelCommand}" Margin="0,0,6,0"/>
+                <Button Content="{Binding AcceptText}" Style="{StaticResource PrimaryButtonStyle}"
+                Command="{Binding AcceptCommand}"/>
+            </StackPanel>
+        </StackPanel>
+    </Border>
+</UserControl>

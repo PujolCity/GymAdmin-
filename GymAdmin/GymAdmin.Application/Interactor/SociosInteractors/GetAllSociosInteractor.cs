@@ -1,4 +1,5 @@
 ﻿using GymAdmin.Applications.DTOs.SociosDto;
+using GymAdmin.Domain.Entities;
 using GymAdmin.Domain.Interfaces.Services;
 using GymAdmin.Domain.Pagination;
 
@@ -39,9 +40,18 @@ public class GetAllSociosInteractor : IGetAllSociosInteractor
             Apellido = s.Apellido,
             ExpiracionMembresia = s.ExpiracionMembresia,
             Estado = s.IsMembresiaExpirada ? "Inactivo" : "Activo",
-            UltimaAsistencia = s.UltimaAsistencia,
+            UltimaAsistencia = s.UltimaAsistencia.HasValue 
+            ? DateTime.SpecifyKind(s.UltimaAsistencia.Value, DateTimeKind.Utc)
+            .ToLocalTime() : null,
             VigenciaTexto = s.VigenciaTexto,
-            CreditosRestantes = s.CreditosRestantes
+            CreditosRestantes = s.CreditosRestantes,
+            TotalCreditosComprados = s.TotalCreditosComprados,
+            UltimoPagoTexto = s.UltimoPago.HasValue
+            ? DateTime.SpecifyKind(s.UltimoPago.Value, DateTimeKind.Utc)
+            .ToLocalTime()
+            .ToString("dd/MM/yyyy HH:mm") : "—",
+            PlanNombre = s.PlanNombre,  
+            PlanPrecio = s.PlanPrecio,
         }).ToList();
 
         return new PagedResult<SocioDto>

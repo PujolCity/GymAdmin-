@@ -134,7 +134,9 @@
                         </DataGridTextColumn>
 
                         <DataGridTextColumn Header="ESTADO" Binding="{Binding Estado}" 
-                                            Width="Auto" MinWidth="120">
+                                            Width="Auto" MinWidth="120"
+                                            SortMemberPath="{x:Null}"
+                                            CanUserSort="False">
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
                                     <Setter Property="Foreground" Value="{Binding Estado, Converter={StaticResource StatusToColorConverter}}"/>
@@ -160,9 +162,9 @@
                                 <Style TargetType="TextBlock" BasedOn="{StaticResource CenteredCellText}" />
                             </DataGridTextColumn.ElementStyle>
                         </DataGridTextColumn>
-                        
+
                         <DataGridTextColumn Header="ÚLTIMA ASISTENCIA" 
-                                            Binding="{Binding UltimaAsistencia, StringFormat={}{0:dd/MM/yyyy HH:ss}}" 
+                                            Binding="{Binding UltimaAsistencia, StringFormat={}{0:dd/MM/yyyy HH:mm}}" 
                                             Width="130" SortMemberPath="UltimaAsistencia">
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock" BasedOn="{StaticResource CenteredCellText}" />

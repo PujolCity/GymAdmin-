@@ -38,7 +38,7 @@ public sealed partial class SociosViewModel : ViewModelBase, IDisposable
     private string selectedStatusFilter = "Todos";
 
     [ObservableProperty]
-    private string sortBy = "NombreCompleto";
+    private string sortBy;
 
     [ObservableProperty]
     private bool sortDesc;
@@ -211,10 +211,24 @@ public sealed partial class SociosViewModel : ViewModelBase, IDisposable
 
     private bool CanSimpleAction() => !IsBusy;
 
-    [RelayCommand(CanExecute = nameof(CanRowAction))]
+    [RelayCommand(CanExecute = nameof(CanSimpleAction))]
     private async Task EditarSocio()
     {
-        /* TODO */
+        if (SocioSeleccionado is null) return;
+
+        var vm = _sp.GetRequiredService<EditarSocioViewModel>();
+        await vm.LoadAsync(SocioSeleccionado);
+
+        vm.CloseRequested += async () =>
+        {
+            IsDialogOpen = false;
+            DialogContent = null;
+            await LoadAsync(); 
+        };
+
+        var view = new EditarSocioDialog { DataContext = vm };
+        DialogContent = view;
+        IsDialogOpen = true;
     }
 
 
@@ -313,7 +327,7 @@ public sealed partial class SociosViewModel : ViewModelBase, IDisposable
             var asisitenciaDto = new CreateAsistenciaDto
             {
                 IdSocio = SocioSeleccionado.Id,
-                Fecha = DateTime.Now
+                Fecha = DateTime.UtcNow
             };
 
             var result = await _createAsistenciaInteractor.ExecuteAsync(asisitenciaDto, CancellationToken.None);
@@ -335,6 +349,7 @@ public sealed partial class SociosViewModel : ViewModelBase, IDisposable
     {
         FiltroBusqueda = string.Empty;
         SelectedStatusFilter = "Todos";
+        SortBy = "";
     }
 
     [RelayCommand(CanExecute = nameof(CanSimpleAction))]

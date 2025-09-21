@@ -10,6 +10,11 @@ public class SocioDto
     public string Estado { get; set; } = "Inactivo";
     public int CreditosRestantes { get; set; }
     public DateTime? ExpiracionMembresia { get; set; } = DateTime.UtcNow;
-    public DateTime? UltimaAsistencia { get; set; }
+    public DateTime? UltimaAsistencia { get; set; } = DateTime.UtcNow;
     public string VigenciaTexto { get; set; }
+    public string FechaRegistro { get; set; }
+    public int TotalCreditosComprados { get; set; }
+    public string UltimoPagoTexto { get; set; }
+    public string PlanNombre { get; set; }
+    public decimal PlanPrecio { get; set; }
 }

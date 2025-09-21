@@ -101,7 +101,7 @@ public sealed partial class AddPagoViewModel : ViewModelBase, IDataErrorInfo, ID
         GuardarCommand.NotifyCanExecuteChanged();
     }
 
-    [ObservableProperty] private DateTime? fechaPago = DateTime.Today;
+    [ObservableProperty] private DateTime? fechaPago = DateTime.UtcNow;
     partial void OnFechaPagoChanged(DateTime? value)
     {
         HasFechaPagoInteracted = true;

@@ -19,17 +19,5 @@ public class SocioCreateDtoValidator : AbstractValidator<SocioCreateDto>
             .NotEmpty().WithMessage("El apellido es obligatorio.")
             .MaximumLength(50).WithMessage("El apellido no puede exceder los 50 caracteres.");
         
-        //RuleFor(x => x.Email)
-        //     .NotEmpty().WithMessage("Email es requerido")
-        //     .EmailAddress().WithMessage("Formato de email inválido")
-        //     .Must(BeAValidEmailDomain).WithMessage("El dominio del email no es válido.");
-    }
-
-    // Método opcional para validar el dominio del email (ejemplo: rechazar dominios temporales)
-    private bool BeAValidEmailDomain(string email)
-    {
-        var domainsToBlock = new[] { "temp.com", "fake.org" }; // Ejemplo: lista de dominios no permitidos
-        var domain = email.Split('@').LastOrDefault();
-        return domain != null && !domainsToBlock.Contains(domain);
     }
 }
