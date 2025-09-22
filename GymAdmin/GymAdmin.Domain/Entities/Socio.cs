@@ -8,12 +8,10 @@ public class Socio : EntityBase, IEncryptableEntity
     public string DniEncrypted { get; set; } = string.Empty;
     public string Nombre { get; set; }
     public string Apellido { get; set; }
-    //public EstadoSocio Estado { get; set; } = EstadoSocio.Inactivo;
     public DateTime FechaRegistro { get; set; } = DateTime.UtcNow;
     public string DniHash { get; set; } = null!;
     public int CreditosRestantes { get; set; }
     public int TotalCreditosComprados { get; set; }
-    //public DateTime UltimoPago { get; set; } = DateTime.UtcNow;
     public DateTime? ExpiracionMembresia { get; set; } = DateTime.UtcNow.AddDays(-1);
 
     [NotMapped] public string Dni { get; set; }
@@ -32,11 +30,14 @@ public class Socio : EntityBase, IEncryptableEntity
                 : $"Vence: {ExpiracionMembresia:dd/MM/yyyy}";
         }
     }
+    [NotMapped] public DateTime? UltimoPago { get; set; }
+    [NotMapped] public string PlanNombre { get; set; }
+    [NotMapped] public decimal PlanPrecio { get; set; }
 
     public ICollection<Pagos> Pagos { get; set; } = new List<Pagos>();
     public ICollection<Asistencia> Asistencias { get; set; } = new List<Asistencia>();
 
-  
+
     // Métodos de negocio
     public void AddCredits(int credits, int validityDays, DateTime? nowUtc = null)
     {
@@ -54,9 +55,9 @@ public class Socio : EntityBase, IEncryptableEntity
     }
     public void AplicaCompraReseteando(int credits, DateTime nuevaExpiracionUtc)
     {
-        CreditosRestantes = credits;                // pisa saldo anterior
-        TotalCreditosComprados += credits;          // (histórico)
-        ExpiracionMembresia = nuevaExpiracionUtc;   // pisa vencimiento anterior
+        CreditosRestantes = credits;
+        TotalCreditosComprados += credits;
+        ExpiracionMembresia = nuevaExpiracionUtc;
     }
 
     public void HandleDecryption(ICryptoService cryptoService)
@@ -92,5 +93,13 @@ public class Socio : EntityBase, IEncryptableEntity
 
         CreditosRestantes--;
         return true;
+    }
+
+    public void ReintegrarCreditoPorEliminacion(Asistencia asistencia)
+    {
+        if (asistencia is null) return;
+        if (!asistencia.SeUsoCredito) return;
+
+        CreditosRestantes++;
     }
 }

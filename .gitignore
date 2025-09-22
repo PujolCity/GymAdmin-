@@ -16,7 +16,6 @@
 *.db-wal
 *.db-journal
 
-
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 
@@ -200,6 +199,7 @@ DocProject/Help/html
 
 # Click-Once directory
 publish/
+installer/output/
 
 # Publish Web Output
 *.[Pp]ublish.xml

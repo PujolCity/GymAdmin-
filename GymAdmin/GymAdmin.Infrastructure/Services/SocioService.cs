@@ -4,7 +4,6 @@ using GymAdmin.Domain.Interfaces.Repositories;
 using GymAdmin.Domain.Interfaces.Services;
 using GymAdmin.Domain.Pagination;
 using GymAdmin.Domain.Results;
-using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -51,6 +50,34 @@ public class SocioService : ISocioService
         }
     }
 
+    public async Task<Result> UpdateAsync(Socio socio, CancellationToken ct = default)
+    {
+        var socioUpdate = await _unitOfWork.SocioRepo.GetByIdAsync(socio.Id, ct);
+        if (socioUpdate == null)
+            return Result.Fail("El socio no existe.");
+
+        var socioWithSameDni = await _unitOfWork.SocioRepo.GetSocioByDni(socio.Dni);
+        if (socioWithSameDni != null && socioWithSameDni.Id != socio.Id)
+            return Result.Fail("Ya existe un socio con el mismo DNI.");
+        try
+        {
+            socioUpdate.Nombre = socio.Nombre;
+            socioUpdate.Apellido = socio.Apellido;
+            socioUpdate.Dni = socio.Dni;
+
+            _unitOfWork.SocioRepo.Update(socioUpdate);
+            await _unitOfWork.CommitAsync(ct);
+
+            _logger.LogInformation("Socio actualizado: {Nombre} {Apellido} (Id={Id})", socio.Nombre, socio.Apellido, socio.Id);
+            return Result.Ok();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al actualizar socio {SocioId}", socio.Id);
+            return Result.Fail("Ocurrió un error al actualizar el socio.");
+        }
+    }
+
     public async Task<Result> DeleteAsync(Socio socio, CancellationToken ct = default)
     {
         var existSocio = await _unitOfWork.SocioRepo.Query()
@@ -73,7 +100,8 @@ public class SocioService : ISocioService
         }
     }
 
-    public async Task<PagedResult<Socio>> GetAllAsync(PaginationFilter filter, Paging paging, Sorting? sorting = null, CancellationToken ct = default)
+    public async Task<PagedResult<Socio>> GetAllAsync(
+     PaginationFilter filter, Paging paging, Sorting? sorting = null, CancellationToken ct = default)
     {
         var sociosQuery = _unitOfWork.SocioRepo.Query().AsNoTracking();
 
@@ -98,10 +126,10 @@ public class SocioService : ISocioService
 
         if (filter.Status != StatusFilter.Todos)
         {
-            var hoy = DateTime.Today;
+            var nowUtc = DateTime.UtcNow;
             sociosQuery = filter.Status == StatusFilter.Activo
-                ? sociosQuery.Where(s => s.ExpiracionMembresia != null && s.ExpiracionMembresia >= hoy)
-                : sociosQuery.Where(s => s.ExpiracionMembresia == null || s.ExpiracionMembresia < hoy);
+                ? sociosQuery.Where(s => s.ExpiracionMembresia != null && s.ExpiracionMembresia >= nowUtc)
+                : sociosQuery.Where(s => s.ExpiracionMembresia == null || s.ExpiracionMembresia < nowUtc);
         }
 
         var total = await sociosQuery.CountAsync(ct);
@@ -109,7 +137,22 @@ public class SocioService : ISocioService
         var projected = sociosQuery.Select(s => new
         {
             Socio = s,
-            UltimaAsistencia = s.Asistencias.Max(a => (DateTime?)a.Entrada)
+            UltimaAsistencia = s.Asistencias.Max(a => (DateTime?)a.Entrada),
+
+            UltimoPagoInfo = s.Pagos
+                .Where(p => !p.IsDeleted)
+                .OrderByDescending(p => p.FechaPago)                 
+                .Select(p => new
+                {
+                    p.FechaPago,
+                    Precio = p.Precio,
+                    PlanNombre = p.PlanMembresia != null
+                ? p.PlanMembresia.Nombre
+                : null
+                })
+                .FirstOrDefault(),
+
+            TotalCreditos = s.TotalCreditosComprados
         });
 
         if (sorting.HasValue)
@@ -128,12 +171,12 @@ public class SocioService : ISocioService
                 ("ExpiracionMembresia", true) => projected.OrderByDescending(x => x.Socio.ExpiracionMembresia),
                 ("ExpiracionMembresia", false) => projected.OrderBy(x => x.Socio.ExpiracionMembresia),
 
-                _ => projected.OrderBy(x => x.Socio.Apellido).ThenBy(x => x.Socio.Nombre)
+                _ => projected.OrderByDescending(x => x.Socio.FechaRegistro)
             };
         }
         else
         {
-            projected = projected.OrderBy(x => x.Socio.Apellido).ThenBy(x => x.Socio.Nombre);
+            projected = projected.OrderByDescending(x => x.Socio.FechaRegistro);
         }
 
         var page = Math.Max(1, paging.PageNumber);
@@ -148,10 +191,26 @@ public class SocioService : ISocioService
         foreach (var x in pageItems)
         {
             var socio = x.Socio;
-            socio.UltimaAsistencia = x.UltimaAsistencia;
 
             if (socio is IEncryptableEntity enc)
-                enc.HandleDecryption(_cryptoService);
+                enc.HandleDecryption(_cryptoService); 
+
+            socio.UltimaAsistencia = x.UltimaAsistencia;
+
+            if (x.UltimoPagoInfo is not null)
+            {
+                socio.UltimoPago = DateTime.SpecifyKind(x.UltimoPagoInfo.FechaPago, DateTimeKind.Utc);
+
+                socio.PlanNombre = string.IsNullOrWhiteSpace(x.UltimoPagoInfo.PlanNombre) ? "—" : x.UltimoPagoInfo.PlanNombre;
+
+                socio.PlanPrecio = x.UltimoPagoInfo.Precio; 
+            }
+            else
+            {
+                socio.UltimoPago = null;
+                socio.PlanNombre = "—";
+                socio.PlanPrecio = 0m;
+            }
 
             if (socio is Socio s)
                 s.ExpireIfNeeded();
@@ -178,29 +237,41 @@ public class SocioService : ISocioService
             .ToList();
     }
 
-    public async Task<Result> RegistrarAsistenciaAsync(Asistencia asistencia, CancellationToken ct = default)
+    public async Task<Result<Socio>> GetSocioByIdAsync(int socioId, CancellationToken ct = default)
     {
-        var socio = await _unitOfWork.SocioRepo.GetByIdAsync(asistencia.SocioId, ct);
-        if (socio is null)
-            return Result.Fail("No existe un socio con el Id.");
+        var data = await _unitOfWork.SocioRepo.Query()
+            .AsNoTracking()
+            .Where(s => s.Id == socioId)
+            .Select(s => new
+            {
+                Socio = s,
+                UltimoPago = s.Pagos
+                    .Where(p => !p.IsDeleted)
+                    .OrderByDescending(p => p.FechaPago) // <- o p.Fecha
+                    .Select(p => new
+                    {
+                        p.FechaPago,              // <- o p.Fecha
+                        p.Precio,
+                        PlanNombre = p.PlanMembresia.Nombre
+                    })
+                    .FirstOrDefault()
+            })
+            .FirstOrDefaultAsync(ct);
 
-        var seUsoCredito = socio.UsarCredito();
-        if (!seUsoCredito)
-            return Result.Fail("El socio no tiene créditos disponibles.");
+        if (data is null)
+            return Result<Socio>.Fail("No existe un socio con el Id.");
 
-        asistencia.SeUsoCredito = seUsoCredito;
-        asistencia.Socio = socio;
-        try
-        {
-            await _unitOfWork.AsistenciaRepo.AddAsync(asistencia, ct);
-            _unitOfWork.SocioRepo.Update(socio);
-            await _unitOfWork.CommitAsync(ct);
-            return Result.Ok();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error al registrar asistencia para socio {SocioId}", asistencia.SocioId);
-            return Result.Fail("Ocurrió un error al registrar la asistencia.");
-        }
+        var socio = data.Socio;
+        socio.PlanNombre = data.UltimoPago?.PlanNombre ?? "—";
+        socio.PlanPrecio = data.UltimoPago?.Precio ?? 0m;   
+
+        if (socio is IEncryptableEntity enc)
+            enc.HandleDecryption(_cryptoService);
+
+        socio.UltimoPago = data.UltimoPago is null
+            ? (DateTime?)null
+            : DateTime.SpecifyKind(data.UltimoPago.FechaPago, DateTimeKind.Utc);
+
+        return Result<Socio>.Ok(socio);
     }
 }

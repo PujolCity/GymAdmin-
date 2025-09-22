@@ -17,7 +17,7 @@ public class Asistencia : EntityBase
         {
             SocioId = socio.Id,
             Entrada = DateTime.UtcNow,
-            SeUsoCredito = socio.UsarCredito(), // Intenta usar un crédito
+            SeUsoCredito = socio.UsarCredito(), 
             Observaciones = observaciones
         };
 

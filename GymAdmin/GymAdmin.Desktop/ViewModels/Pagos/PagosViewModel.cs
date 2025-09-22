@@ -91,7 +91,8 @@ public partial class PagosViewModel : ViewModelBase, IDisposable
         _ = LoadAsync();
         _ = LoadMethodsAsync();
 
-        BindBusyToCommands(LoadCommand, NuevoPagoCommand, VerPagoCommand, AnularPagoCommand);
+        BindBusyToCommands(LoadCommand, NuevoPagoCommand, VerPagoCommand, AnularPagoCommand, GoFirstPageCommand, GoPrevPageCommand, GoNextPageCommand,
+                           GoLastPageCommand);
     }
 
     partial void OnTextoFiltroChanged(string value)

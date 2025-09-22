@@ -9,13 +9,13 @@ namespace GymAdmin.Applications.Interactor.AsistenciaInteractors;
 
 public class CreateAsistenciaInteractor : ICreateAsistenciaInteractor
 {
-    private readonly ISocioService _socioService;
+    private readonly IAsistenciaService _asistenciaService;
     private readonly IValidator<CreateAsistenciaDto> _validator;
 
-    public CreateAsistenciaInteractor(ISocioService socioService, 
+    public CreateAsistenciaInteractor(IAsistenciaService asistenciaService, 
         IValidator<CreateAsistenciaDto> validator)
     {
-        _socioService = socioService;
+        _asistenciaService = asistenciaService;
         _validator = validator;
     }
 
@@ -27,7 +27,7 @@ public class CreateAsistenciaInteractor : ICreateAsistenciaInteractor
 
         var asistencia = asistenciaDto.ToAsistencia();
 
-        var result = await _socioService.RegistrarAsistenciaAsync(asistencia, ct);
+        var result = await _asistenciaService.RegistrarAsync(asistencia, ct);
 
         if (result.IsSuccess)
             return Result.Ok();

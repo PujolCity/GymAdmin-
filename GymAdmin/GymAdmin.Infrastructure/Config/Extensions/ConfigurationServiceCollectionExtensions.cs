@@ -43,6 +43,8 @@ public static class ConfigurationServiceCollectionExtensions
         services.AddTransient<ISocioCreateInteractor, SocioCreateInteractor>();
         services.AddTransient<IGetAllSociosInteractor, GetAllSociosInteractor>();
         services.AddTransient<IDeleteSocioInteractor, DeleteSocioInteractor>();
+        services.AddTransient<IUpdateSocioInteractor, UpdateSocioInteractor>();
+        services.AddTransient<IGetSocioByIdInteractor, GetSocioByIdInteractor>();
 
         services.AddTransient<IGetPlanesMembresiaInteractor, GetPlanesMembresiaInteractor>();
         services.AddTransient<ICreateOrUpdatePlanInteractor, CreateOrUpdatePlanInteractor>();
@@ -55,6 +57,9 @@ public static class ConfigurationServiceCollectionExtensions
         services.AddTransient<IAnularPagoInteractor, AnularPagoInteractor>();
 
         services.AddTransient<ICreateAsistenciaInteractor, CreateAsistenciaInteractor>();
+        services.AddTransient<IGetAsistenciasBySocioInteractor, GetAsistenciasBySocioInteractor>();
+        services.AddTransient<IUpdateAsistenciaInteractor, UpdateAsistenciaInteractor>();
+        services.AddTransient<IDeleteAsistenciaInteractor, DeleteAsistenciaInteractor>();
 
         return services;
     }
@@ -64,7 +69,7 @@ public static class ConfigurationServiceCollectionExtensions
         services.AddTransient<ISocioService, SocioService>();
         services.AddTransient<IPlanMembresiaService, PlanMembresiaService>();
         services.AddTransient<IPagosServices, PagosServices>();
-
+        services.AddTransient<IAsistenciaService, AsistenciaService>();
         return services;
     }
 
@@ -87,7 +92,7 @@ public static class ConfigurationServiceCollectionExtensions
         var pathsCfg = configuration.GetSection("PathsConfig").Get<PathsConfig>();
 
         // 2) Armar ruta absoluta: %MyDocuments%\GymAdmin\Logs\log-.txt
-        var root = ExpandRoot(pathsCfg.Root); 
+        var root = ExpandRoot(pathsCfg.Root);
         var logsDir = Path.Combine(root, pathsCfg.LogsDir ?? "Logs");
         Directory.CreateDirectory(logsDir);
         var logFilePattern = Path.Combine(logsDir, pathsCfg.LogFilePattern ?? "log-.txt");
@@ -108,7 +113,7 @@ public static class ConfigurationServiceCollectionExtensions
                 shared: true)
             .CreateLogger();
 
-        Log.Logger = logger;                
+        Log.Logger = logger;
         services.AddSingleton<Serilog.ILogger>(logger);
 
         services.AddLogging(lb =>

@@ -1,4 +1,5 @@
-﻿using GymAdmin.Applications.AppModule;
+﻿using AutoUpdaterDotNET;
+using GymAdmin.Applications.AppModule;
 using GymAdmin.Desktop.ConfigStartup;
 using GymAdmin.Infrastructure.Config.Extensions;
 using GymAdmin.Infrastructure.Data;
@@ -44,6 +45,12 @@ public partial class App : Application
             var initializer = scope.ServiceProvider.GetRequiredService<DatabaseInitializer>();
             initializer.InitializeAsync().GetAwaiter().GetResult();
         }
+
+        AutoUpdater.RunUpdateAsAdmin = true;
+        AutoUpdater.Mandatory = false;
+        AutoUpdater.ShowSkipButton = false;
+        AutoUpdater.ShowRemindLaterButton = false;
+        AutoUpdater.Start("https://<USER>.github.io/<REPO>/update.xml");
 
         // Mostrar ventana principal
         var mainWindow = _host.Services.GetRequiredService<MainWindow>();

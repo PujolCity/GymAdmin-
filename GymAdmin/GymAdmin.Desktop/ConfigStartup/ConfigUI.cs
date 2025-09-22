@@ -1,4 +1,5 @@
 ﻿using GymAdmin.Desktop.ViewModels;
+using GymAdmin.Desktop.ViewModels.Asistencia;
 using GymAdmin.Desktop.ViewModels.Dialogs;
 using GymAdmin.Desktop.ViewModels.Membresias;
 using GymAdmin.Desktop.ViewModels.Pagos;
@@ -30,6 +31,8 @@ public static class ConfigUI
         services.AddTransient<ConfirmDialogViewModel>();
         services.AddTransient<AddPagoViewModel>();
         services.AddTransient<VerPagoViewModel>();
+        services.AddTransient<EditarSocioViewModel>();
+        services.AddTransient<EditAsistenciaDialogViewModel>();
 
         return services;
     }

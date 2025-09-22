@@ -6,7 +6,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:local="clr-namespace:GymAdmin.Desktop.Views.Dialogs"
              xmlns:converter="clr-namespace:GymAdmin.Desktop.Converters"
-             xmlns:b="clr-namespace:GymAdmin.Desktop.Views.Behaviors"
+             xmlns:behaviors="clr-namespace:GymAdmin.Desktop.Views.Behaviors"
              xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
              mc:Ignorable="d"             
              Background="Transparent"
@@ -220,8 +220,10 @@
                     </Grid.RowDefinitions>
                     <TextBlock Text="Fecha de pago*" />
                     <DatePicker Grid.Row="1"
-                                SelectedDate="{Binding FechaPago}"
                                 Style="{StaticResource FilterDatePickerStyle}"
+                                SelectedDate="{Binding FechaPago, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
+                    behaviors:DateMaskBehavior.IsEnabled="True"
+                    behaviors:DateMaskBehavior.Format="dd/MM/yyyy"
                                 HorizontalAlignment="Stretch">
                         <DatePicker.Resources>
                             <Style TargetType="DatePickerTextBox">
@@ -240,8 +242,10 @@
                     </Grid.RowDefinitions>
                     <TextBlock Text="Vence el*" />
                     <DatePicker Grid.Row="1"
-                                SelectedDate="{Binding FechaVencimiento}"
                                 Style="{StaticResource FilterDatePickerStyle}"
+                                SelectedDate="{Binding FechaVencimiento, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
+                    behaviors:DateMaskBehavior.IsEnabled="True"
+                    behaviors:DateMaskBehavior.Format="dd/MM/yyyy"
                                 HorizontalAlignment="Stretch">
                         <DatePicker.Resources>
                             <Style TargetType="DatePickerTextBox">

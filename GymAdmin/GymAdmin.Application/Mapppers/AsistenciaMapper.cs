@@ -12,6 +12,7 @@ public static class AsistenciaMapper
         {
             SocioId = createAsistenciaDto.IdSocio,
             Entrada = DateTime.UtcNow,
+            Observaciones = createAsistenciaDto.Observaciones ?? string.Empty
         };
     }
 }
