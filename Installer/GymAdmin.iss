@@ -23,7 +23,7 @@ ArchitecturesInstallIn64BitMode=x64
 
 [Files]
 ; Toma todo lo que dejó dotnet publish en /publish (carpeta al lado de /installer)
-Source: "..\GymAdmin\publish\*"; DestDir: "{app}"; Flags: recursesubdirs ignoreversion
+Source: "..\publish\*"; DestDir: "{app}"; Flags: recursesubdirs ignoreversion
 
 [Icons]
 Name: "{autoprograms}\{#AppName}"; Filename: "{app}\GymAdmin.Desktop.exe"
