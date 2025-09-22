@@ -3,7 +3,7 @@ using GymAdmin.Domain.Results;
 
 namespace GymAdmin.Applications.Interactor.AsistenciaInteractors;
 
-public interface IUpdateAsistenciaInteractor
+public interface IDeleteAsistenciaInteractor
 {
-    Task<Result> ExecuteAsync(AsistenciaDto asistenciaDto, CancellationToken ct = default);
+    Task<Result> ExecuteAsync(DeleteAsistenciaDto request, CancellationToken ct = default);
 }

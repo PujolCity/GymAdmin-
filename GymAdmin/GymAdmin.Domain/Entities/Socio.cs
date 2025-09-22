@@ -37,7 +37,7 @@ public class Socio : EntityBase, IEncryptableEntity
     public ICollection<Pagos> Pagos { get; set; } = new List<Pagos>();
     public ICollection<Asistencia> Asistencias { get; set; } = new List<Asistencia>();
 
-  
+
     // Métodos de negocio
     public void AddCredits(int credits, int validityDays, DateTime? nowUtc = null)
     {
@@ -55,9 +55,9 @@ public class Socio : EntityBase, IEncryptableEntity
     }
     public void AplicaCompraReseteando(int credits, DateTime nuevaExpiracionUtc)
     {
-        CreditosRestantes = credits;               
-        TotalCreditosComprados += credits;          
-        ExpiracionMembresia = nuevaExpiracionUtc;  
+        CreditosRestantes = credits;
+        TotalCreditosComprados += credits;
+        ExpiracionMembresia = nuevaExpiracionUtc;
     }
 
     public void HandleDecryption(ICryptoService cryptoService)
@@ -93,5 +93,13 @@ public class Socio : EntityBase, IEncryptableEntity
 
         CreditosRestantes--;
         return true;
+    }
+
+    public void ReintegrarCreditoPorEliminacion(Asistencia asistencia)
+    {
+        if (asistencia is null) return;
+        if (!asistencia.SeUsoCredito) return;
+
+        CreditosRestantes++;
     }
 }

@@ -1,0 +1,92 @@
+name: Build & Release GymAdmin (tag)
+
+on:
+  push:
+    tags:
+      - 'v*'   # ej: v1.0.3
+
+jobs:
+  build-package:
+    runs-on: windows-latest
+    env:
+      SOLUTION: GymAdmin-/GymAdmin/GymAdmin.Desktop/GymAdmin.Desktop.csproj
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Extract version from tag
+        id: ver
+        shell: pwsh
+        run: |
+          $tag = "${{ github.ref_name }}"       # ej v1.0.3
+          $v = $tag.TrimStart('v')
+          echo "VERSION=$v" >> $env:GITHUB_OUTPUT
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        run: dotnet restore "$env:SOLUTION"
+
+      - name: Publish (Release single-folder)
+        run: dotnet publish "$env:SOLUTION" -c Release -p:Version=${{ steps.ver.outputs.VERSION }} -o publish
+
+      - name: Install Inno Setup
+        run: choco install innosetup --yes
+
+      - name: Build Installer (Inno Setup)
+        shell: pwsh
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          & $iscc "/DAppVersion=${{ steps.ver.outputs.VERSION }}" "installer\GymAdmin.iss"
+          # salida: installer\output\GymAdmin-<ver>-Setup.exe
+
+      - name: Compute MD5
+        id: md5
+        shell: pwsh
+        run: |
+          $file = "installer\output\GymAdmin-${{ steps.ver.outputs.VERSION }}-Setup.exe"
+          $hash = (Get-FileHash $file -Algorithm MD5).Hash
+          echo "MD5=$hash" >> $env:GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: "GymAdmin ${{ steps.ver.outputs.VERSION }}"
+          draft: false
+          prerelease: false
+          files: |
+            installer/output/GymAdmin-${{ steps.ver.outputs.VERSION }}-Setup.exe
+
+      - name: Generate update.xml
+        shell: pwsh
+        run: |
+          $ver = "${{ steps.ver.outputs.VERSION }}"
+          $user = "${{ github.repository_owner }}"
+          $repo = "${{ github.event.repository.name }}"
+          $url = "https://github.com/$user/$repo/releases/download/v$ver/GymAdmin-$ver-Setup.exe"
+          $md5 = "${{ steps.md5.outputs.MD5 }}"
+          $xml = @"
+<?xml version="1.0" encoding="UTF-8"?>
+<item>
+  <version>$ver</version>
+  <url>$url</url>
+  <changelog>https://$user.github.io/$repo/changelog-$ver.html</changelog>
+  <mandatory>false</mandatory>
+  <checksum algorithm="MD5">$md5</checksum>
+</item>
+"@
+          New-Item -ItemType Directory -Force -Path site | Out-Null
+          $xml | Out-File -Encoding UTF8 site/update.xml
+          "GymAdmin $ver - cambios" | Out-File -Encoding UTF8 site/changelog-$ver.html
+
+      - name: Publish update.xml to GitHub Pages (gh-pages)
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: site
+          publish_branch: gh-pages

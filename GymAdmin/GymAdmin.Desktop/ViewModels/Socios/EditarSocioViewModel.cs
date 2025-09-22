@@ -1,23 +1,29 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using GymAdmin.Applications.DTOs;
 using GymAdmin.Applications.DTOs.Asistencia;
 using GymAdmin.Applications.DTOs.SociosDto;
 using GymAdmin.Applications.Interactor.AsistenciaInteractors;
 using GymAdmin.Applications.Interactor.SociosInteractors;
 using GymAdmin.Desktop.ViewModels.Asistencia;
+using GymAdmin.Desktop.ViewModels.Dialogs;
 using GymAdmin.Desktop.Views.Dialogs;
-using GymAdmin.Domain.Results;
 using System.Collections.ObjectModel;
+using System.Windows;
 
 namespace GymAdmin.Desktop.ViewModels.Socios;
 
 public partial class EditarSocioViewModel : ViewModelBase
 {
+    private const string COLOR_ROJO = "DangerButtonStyle";
+    private const string COLOR_PRIMARIO = "PrimaryButtonStyle";
+
     private readonly IUpdateSocioInteractor _updateSocio;
     private readonly IGetAsistenciasBySocioInteractor _getAsistencias;
-    // private readonly IDeleteAsistenciaInteractor _deleteAsistencia;
+    private readonly IDeleteAsistenciaInteractor _deleteAsistencia;
     private readonly ICreateAsistenciaInteractor _createAsistencia;
     private readonly IGetSocioByIdInteractor _getSocioById;
+    private readonly IUpdateAsistenciaInteractor _updateAsistencia;
 
     private CancellationTokenSource? _cts;
     private readonly IServiceProvider _sp;
@@ -87,23 +93,24 @@ public partial class EditarSocioViewModel : ViewModelBase
         IUpdateSocioInteractor updateSocio,
         IGetAsistenciasBySocioInteractor getAsistencias,
         IServiceProvider sp,
-        ICreateAsistenciaInteractor createAsistencia
+        ICreateAsistenciaInteractor createAsistencia,
+        IGetSocioByIdInteractor getSocioById,
+        IDeleteAsistenciaInteractor deleteAsistencia
 ,
-        IGetSocioByIdInteractor getSocioById
-        //,IDeleteAsistenciaInteractor deleteAsistencia
-        )
+        IUpdateAsistenciaInteractor updateAsistencia)
     {
         _getSocioById = getSocioById;
         _updateSocio = updateSocio;
         _getAsistencias = getAsistencias;
         _createAsistencia = createAsistencia;
-        //  _deleteAsistencia = deleteAsistencia;
+        _deleteAsistencia = deleteAsistencia;
 
         _ = LoadAsistenciasAsync();
         _sp = sp;
 
         BindBusyToCommands(GoFirstPageCommand, GoPrevPageCommand, GoNextPageCommand,
                            GoLastPageCommand);
+        _updateAsistencia = updateAsistencia;
     }
 
     public async Task LoadAsync(SocioDto socio, CancellationToken ct = default)
@@ -130,6 +137,7 @@ public partial class EditarSocioViewModel : ViewModelBase
         PageNumber = 1;
         await LoadAsistenciasAsync(ct);
     }
+    
     private async Task ReloadSocioHeaderAsync(CancellationToken ct = default)
     {
         var result = await _getSocioById.ExecuteAsync(Id, ct);
@@ -144,6 +152,7 @@ public partial class EditarSocioViewModel : ViewModelBase
         TotalCreditosComprados = socio.TotalCreditosComprados;
         UltimoPagoTexto = socio.UltimoPagoTexto ?? "";
     }
+
     private async Task RefreshSocioAndAsistenciasAsync(bool goFirstPage = false, CancellationToken ct = default)
     {
         if (goFirstPage) PageNumber = 1;
@@ -195,13 +204,12 @@ public partial class EditarSocioViewModel : ViewModelBase
         {
             IsBusy = true; ErrorMessage = null;
 
-            var cmd = new SocioDto
+            var cmd = new SocioUpdateDto
             {
                 Id = Id,
                 Dni = Dni,
                 Nombre = Nombre,
-                Apellido = Apellido,
-                CreditosRestantes = CreditosRestantes
+                Apellido = Apellido
             };
 
             var result = await _updateSocio.ExecuteAsync(cmd, CancellationToken.None);
@@ -215,6 +223,9 @@ public partial class EditarSocioViewModel : ViewModelBase
         }
         finally { IsBusy = false; }
     }
+
+    [RelayCommand]
+    private void ClearError() => ErrorMessage = null;
 
     // --- Paginación comandos ---
     [RelayCommand(CanExecute = nameof(CanGoFirst))]
@@ -244,6 +255,29 @@ public partial class EditarSocioViewModel : ViewModelBase
     private async Task NuevaAsistenciaAsync()
     {
         ErrorMessage = null;
+
+        if (Estado != "Activo")
+        {
+            await ShowConfirmAsync(
+                "Registrar Asistencia",
+                $"No se puede registrar la asistencia de un socio inactivo.\n" +
+                $"Por favor, primero activá el estado del socio \"{Apellido} {Nombre}\".",
+                "Aceptar",
+                string.Empty,
+                COLOR_PRIMARIO,COLOR_ROJO,false);
+            return;
+        }
+        if (CreditosRestantes <= 0)
+        {
+            await ShowConfirmAsync(
+                "Registrar Asistencia",
+                $"El socio \"{Apellido} {Nombre}\" no tiene créditos disponibles.\n" +
+                $"Por favor, primero cargá créditos al socio.",
+                "Aceptar",
+                string.Empty,
+                COLOR_PRIMARIO, COLOR_ROJO, false);
+            return;
+        }
 
         var res = await ShowAsistenciaEditorAsync(null, null, "Nueva asistencia", "Crear");
         if (res is null) return;
@@ -283,39 +317,89 @@ public partial class EditarSocioViewModel : ViewModelBase
     [RelayCommand]
     private async Task EditarAsistenciaAsync(AsistenciaRow? row)
     {
-        //if (row is null) return;
-        //ErrorMessage = null;
+        if (row is null) return;
+        ErrorMessage = null;
 
-        //var res = await ShowAsistenciaEditorAsync(row.EntradaLocal,
-        //                                          row.Observaciones == "—" ? "" : row.Observaciones,
-        //                                          "Editar asistencia", "Guardar");
-        //if (res is null) return; // cancelado
+        // Abrir editor precargado
+        var res = await ShowAsistenciaEditorAsync(
+            row.EntradaLocal,
+            row.Observaciones == "—" ? "" : row.Observaciones,
+            "Editar asistencia",
+            "Guardar"
+        );
+        if (res is null) return; // cancelado
 
-        //try
-        //{
-        //    IsBusy = true;
-        //    // Actualizo el row primero (optimista)
-        //    row.EntradaLocal = res.EntradaLocal;
-        //    row.Observaciones = string.IsNullOrWhiteSpace(res.Observaciones) ? "—" : res.Observaciones;
+        _cts?.Cancel();
+        _cts = new CancellationTokenSource();
+        var ct = _cts.Token;
 
-        //    var upd = row.ToUpdateDto();
-        //   // var result = await _updateAsistencia.ExecuteAsync(upd, CancellationToken.None);
-        //    if (!result.IsSuccess)
-        //        ErrorMessage = string.Join(Environment.NewLine, result.Errors);
-        //}
-        //finally { IsBusy = false; }
+        var bkEntrada = row.EntradaLocal;
+        var bkObs = row.Observaciones;
+
+        try
+        {
+            IsBusy = true;
+            row.EntradaLocal = res.EntradaLocal;
+            row.Observaciones = string.IsNullOrWhiteSpace(res.Observaciones) ? "—" : res.Observaciones;
+
+            var upd = new AsistenciaDto
+            {
+                Id = row.Id,
+                Entrada = res.EntradaUtc,      
+                SocioId = Id,               
+                Observaciones = res.Observaciones?.Trim() ?? ""
+            };
+
+            var result = await _updateAsistencia.ExecuteAsync(upd, ct);
+            if (!result.IsSuccess)
+            {
+                row.EntradaLocal = bkEntrada;
+                row.Observaciones = bkObs;
+                ErrorMessage = string.Join(Environment.NewLine, result.Errors);
+                return;
+            }
+            await LoadAsistenciasAsync(ct);
+        }
+        catch (OperationCanceledException) { /* nada */ }
+        finally
+        {
+            IsBusy = false;
+        }
     }
 
     [RelayCommand]
     private async Task EliminarAsistenciaAsync(AsistenciaRow? row)
     {
-        //if (row is null) return;
-        //// Confirmación previa recomendada
-        //var result = await _deleteAsistencia.ExecuteAsync(row.Id, CancellationToken.None);
-        //if (result.IsSuccess)
-        //    Asistencias.Remove(row);
-        //else
-        //    ErrorMessage = string.Join(Environment.NewLine, result.Errors);
+        ErrorMessage = null;
+        _cts?.Cancel();
+        _cts = new CancellationTokenSource();
+        var ct = _cts.Token;
+
+        if (row is null) return;
+
+        var ok = await ShowConfirmAsync(
+            "Eliminar Asistencia",
+            $"¿Estás seguro de eliminar la asistencia del {row.EntradaLocal:dd/MM/yyyy HH:mm}?\n" +
+            $"Esta acción no se puede deshacer.",
+            accept: "Eliminar",
+            cancel: "Cancelar");
+        if (!ok) return;
+
+        try
+        {
+            var request = new DeleteAsistenciaDto { Id = row.Id, SocioId = Id };
+            var result = await _deleteAsistencia.ExecuteAsync(request, CancellationToken.None);
+            if (result.IsSuccess)
+                Asistencias.Remove(row);
+            else
+                ErrorMessage = string.Join(Environment.NewLine, result.Errors);
+
+            await RefreshSocioAndAsistenciasAsync(goFirstPage: true, ct);
+        }
+        catch (OperationCanceledException) { /* nada */ }
+        finally { IsBusy = false; }
+
+
     }
 
     // --- Row VM ---
@@ -367,5 +451,34 @@ public partial class EditarSocioViewModel : ViewModelBase
         var res = await vm.Task;
         CloseInnerDialog();
         return res;
+    }
+
+    private async Task<bool> ShowConfirmAsync(string title, string message, string accept = "Eliminar", string cancel = "Cancelar", string acceptColor = COLOR_ROJO, string cancelColor = COLOR_PRIMARIO, bool showCancel = true)
+    {
+        var vm = new ConfirmDialogViewModel
+        {
+            Title = title,
+            Message = message,
+            AcceptText = accept,
+            CancelText = cancel,
+            AcceptButtonStyle = (Style)Application.Current.FindResource(acceptColor),
+            CancelButtonStyle = (Style)Application.Current.FindResource(cancelColor),
+            ShowCancelButton = showCancel
+        };
+
+        var view = new ConfirmDialogView { DataContext = vm };
+
+        // Mostrar overlay
+        InnerDialogContent = view;
+        IsInnerDialogOpen = true;
+
+        // Esperar la selección del usuario
+        var ok = await vm.Task;
+
+        // Cerrar overlay
+        IsInnerDialogOpen = false;
+        innerDialogContent = null;
+
+        return ok;
     }
 }

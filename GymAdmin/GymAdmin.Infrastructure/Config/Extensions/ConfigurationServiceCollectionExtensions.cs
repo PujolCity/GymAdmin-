@@ -59,6 +59,7 @@ public static class ConfigurationServiceCollectionExtensions
         services.AddTransient<ICreateAsistenciaInteractor, CreateAsistenciaInteractor>();
         services.AddTransient<IGetAsistenciasBySocioInteractor, GetAsistenciasBySocioInteractor>();
         services.AddTransient<IUpdateAsistenciaInteractor, UpdateAsistenciaInteractor>();
+        services.AddTransient<IDeleteAsistenciaInteractor, DeleteAsistenciaInteractor>();
 
         return services;
     }

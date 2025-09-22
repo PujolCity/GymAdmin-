@@ -27,7 +27,7 @@ public class CreateAsistenciaInteractor : ICreateAsistenciaInteractor
 
         var asistencia = asistenciaDto.ToAsistencia();
 
-        var result = await _asistenciaService.RegistrarAsistenciaAsync(asistencia, ct);
+        var result = await _asistenciaService.RegistrarAsync(asistencia, ct);
 
         if (result.IsSuccess)
             return Result.Ok();

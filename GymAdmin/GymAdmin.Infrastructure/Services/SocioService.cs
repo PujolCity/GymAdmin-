@@ -50,6 +50,34 @@ public class SocioService : ISocioService
         }
     }
 
+    public async Task<Result> UpdateAsync(Socio socio, CancellationToken ct = default)
+    {
+        var socioUpdate = await _unitOfWork.SocioRepo.GetByIdAsync(socio.Id, ct);
+        if (socioUpdate == null)
+            return Result.Fail("El socio no existe.");
+
+        var socioWithSameDni = await _unitOfWork.SocioRepo.GetSocioByDni(socio.Dni);
+        if (socioWithSameDni != null && socioWithSameDni.Id != socio.Id)
+            return Result.Fail("Ya existe un socio con el mismo DNI.");
+        try
+        {
+            socioUpdate.Nombre = socio.Nombre;
+            socioUpdate.Apellido = socio.Apellido;
+            socioUpdate.Dni = socio.Dni;
+
+            _unitOfWork.SocioRepo.Update(socioUpdate);
+            await _unitOfWork.CommitAsync(ct);
+
+            _logger.LogInformation("Socio actualizado: {Nombre} {Apellido} (Id={Id})", socio.Nombre, socio.Apellido, socio.Id);
+            return Result.Ok();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al actualizar socio {SocioId}", socio.Id);
+            return Result.Fail("Ocurrió un error al actualizar el socio.");
+        }
+    }
+
     public async Task<Result> DeleteAsync(Socio socio, CancellationToken ct = default)
     {
         var existSocio = await _unitOfWork.SocioRepo.Query()

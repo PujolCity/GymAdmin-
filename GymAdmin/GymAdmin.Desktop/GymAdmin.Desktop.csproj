@@ -7,9 +7,25 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<UseWPF>true</UseWPF>
 		<PreserveCompilationContext>true</PreserveCompilationContext>
+		<ApplicationIcon>Resources\Images\gymadmin_icon.ico</ApplicationIcon>
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <None Remove="Resources\Images\Logo.png" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Content Include="Resources\Images\gymadmin_icon.ico" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Resource Include="Resources\Images\gymadmin_icon.ico">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Resource>
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Autoupdater.NET.Official" Version="1.9.2" />
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
 		<PackageReference Include="FontAwesome.Sharp" Version="6.6.0" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.8">
@@ -31,7 +47,13 @@
 
 	<ItemGroup>
 	  <Folder Include="DataDb\" />
-	  <Folder Include="Resources\Images\" />
+	  <Folder Include="Properties\" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Resource Include="Resources\Images\Logo.png">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Resource>
 	</ItemGroup>
 
 </Project>

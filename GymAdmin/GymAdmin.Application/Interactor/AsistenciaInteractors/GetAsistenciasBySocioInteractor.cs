@@ -36,6 +36,7 @@ public class GetAsistenciasBySocioInteractor : IGetAsistenciasBySocioInteractor
             SocioId = a.SocioId,
             Entrada = a.Entrada,
             SeUsoCredito = a.SeUsoCredito,
+            Observaciones = a.Observaciones,
         }).ToList();
 
         return new PagedResult<AsistenciaDto>

@@ -17,6 +17,9 @@ namespace GymAdmin.Desktop.ViewModels.Socios;
 
 public sealed partial class SociosViewModel : ViewModelBase, IDisposable
 {
+    private const string COLOR_ROJO = "DangerButtonStyle";
+    private const string COLOR_PRIMARIO = "PrimaryButtonStyle";
+
     private readonly IGetAllSociosInteractor _getAllSociosInteractor;
     private readonly IDeleteSocioInteractor _deleteSocioInteractor;
     private readonly ICreateAsistenciaInteractor _createAsistenciaInteractor;
@@ -223,7 +226,7 @@ public sealed partial class SociosViewModel : ViewModelBase, IDisposable
         {
             IsDialogOpen = false;
             DialogContent = null;
-            await LoadAsync(); 
+            await LoadAsync();
         };
 
         var view = new EditarSocioDialog { DataContext = vm };
@@ -264,9 +267,9 @@ public sealed partial class SociosViewModel : ViewModelBase, IDisposable
     private void RegistrarPago()
     {
         var vm = _sp.GetRequiredService<AddPagoViewModel>();
-     
+
         SocioLookupDto? socio = null;
-        
+
         if (socioSeleccionado != null)
         {
             socio = new SocioLookupDto
@@ -289,8 +292,8 @@ public sealed partial class SociosViewModel : ViewModelBase, IDisposable
     }
 
     [RelayCommand(CanExecute = nameof(CanSimpleAction))]
-    private async Task RegistrarAsistencia() 
-    { 
+    private async Task RegistrarAsistencia()
+    {
         if (SocioSeleccionado is null) return;
 
         if (SocioSeleccionado.Estado != "Activo")
@@ -299,8 +302,9 @@ public sealed partial class SociosViewModel : ViewModelBase, IDisposable
                 "Registrar Asistencia",
                 $"No se puede registrar la asistencia de un socio inactivo.\n" +
                 $"Por favor, primero activá el estado del socio \"{SocioSeleccionado.NombreCompleto}\".",
-                accept: "Aceptar",
-                cancel: "Cancelar");
+                 "Aceptar",
+                 string.Empty,
+                 COLOR_PRIMARIO, COLOR_ROJO, false);
             return;
         }
         if (SocioSeleccionado.CreditosRestantes <= 0)
@@ -385,7 +389,7 @@ public sealed partial class SociosViewModel : ViewModelBase, IDisposable
         _cts?.Dispose();
     }
 
-    private async Task<bool> ShowConfirmAsync(string title, string message, string accept = "Eliminar", string cancel = "Cancelar")
+    private async Task<bool> ShowConfirmAsync(string title, string message, string accept = "Eliminar", string cancel = "Cancelar", string acceptColor = COLOR_ROJO, string cancelColor = COLOR_PRIMARIO, bool showCancel = true)
     {
         var vm = new ConfirmDialogViewModel
         {
@@ -393,8 +397,9 @@ public sealed partial class SociosViewModel : ViewModelBase, IDisposable
             Message = message,
             AcceptText = accept,
             CancelText = cancel,
-            AcceptButtonStyle = App.Current.FindResource("DangerButtonStyle") as System.Windows.Style,
-            CancelButtonStyle = App.Current.FindResource("PrimaryButtonStyle") as System.Windows.Style
+            AcceptButtonStyle = (Style)Application.Current.FindResource(acceptColor),
+            CancelButtonStyle = (Style)Application.Current.FindResource(cancelColor),
+            ShowCancelButton = showCancel
         };
 
         var view = new ConfirmDialogView { DataContext = vm };

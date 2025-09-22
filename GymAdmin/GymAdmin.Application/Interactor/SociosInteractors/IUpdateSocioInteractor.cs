@@ -5,5 +5,5 @@ namespace GymAdmin.Applications.Interactor.SociosInteractors;
 
 public interface IUpdateSocioInteractor
 {
-    Task<Result> ExecuteAsync(SocioDto socioDto, CancellationToken cancellation = default);
+    Task<Result> ExecuteAsync(SocioUpdateDto socioDto, CancellationToken cancellation = default);
 }
