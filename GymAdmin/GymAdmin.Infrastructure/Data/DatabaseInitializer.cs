@@ -38,7 +38,7 @@ public class DatabaseInitializer
             // Verificar tablas creadas
             await VerifyDatabaseStructureAsync(ct);
 
-            if (await _context.Socios.AnyAsync(ct))
+            if (await _context.MetodosPago.AnyAsync(ct))
             {
                 _logger.LogInformation("Seed omitido: ya existen socios en la base.");
                 return;

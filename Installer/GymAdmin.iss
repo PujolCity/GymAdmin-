@@ -1,6 +1,6 @@
 #define AppName "GymAdmin"
 #ifndef AppVersion
-  #define AppVersion "1.0.0"
+  #define AppVersion "1.0.3"
 #endif
 
 #define AppId "{{2D9A4723-B8E7-48F8-B02C-C6BAF326F03C}}"
@@ -23,7 +23,7 @@ ArchitecturesInstallIn64BitMode=x64
 
 [Files]
 ; Toma todo lo que dejó dotnet publish en /publish (carpeta al lado de /installer)
-Source: "..\GymAdmin\publish\*"; DestDir: "{app}"; Flags: recursesubdirs ignoreversion
+Source: "..\publish\*"; DestDir: "{app}"; Flags: recursesubdirs ignoreversion
 
 [Icons]
 Name: "{autoprograms}\{#AppName}"; Filename: "{app}\GymAdmin.Desktop.exe"
