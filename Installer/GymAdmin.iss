@@ -3,7 +3,10 @@
   #define AppVersion "1.0.0"
 #endif
 
+#define AppId "{{2D9A4723-B8E7-48F8-B02C-C6BAF326F03C}}"
+
 [Setup]
+AppId={#AppId}
 AppName={#AppName}
 AppVersion={#AppVersion}
 DefaultDirName={autopf}\{#AppName}
@@ -15,11 +18,12 @@ SolidCompression=yes
 PrivilegesRequired=admin
 DisableDirPage=no
 DisableProgramGroupPage=yes
-SetupIconFile=..\GymAdmin-\GymAdmin\GymAdmin.Desktop\Resources\Images\gymadmin_icon.ico
+SetupIconFile=..\GymAdmin\GymAdmin.Desktop\Resources\Images\gymadmin_icon.ico
+ArchitecturesInstallIn64BitMode=x64
 
 [Files]
 ; Toma todo lo que dejó dotnet publish en /publish (carpeta al lado de /installer)
-Source: "..\publish\*"; DestDir: "{app}"; Flags: recursesubdirs ignoreversion
+Source: "..\GymAdmin\publish\*"; DestDir: "{app}"; Flags: recursesubdirs ignoreversion
 
 [Icons]
 Name: "{autoprograms}\{#AppName}"; Filename: "{app}\GymAdmin.Desktop.exe"
