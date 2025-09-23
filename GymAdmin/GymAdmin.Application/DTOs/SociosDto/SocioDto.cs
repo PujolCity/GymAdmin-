@@ -16,5 +16,4 @@ public class SocioDto
     public int TotalCreditosComprados { get; set; }
     public string UltimoPagoTexto { get; set; }
     public string PlanNombre { get; set; }
-    public decimal PlanPrecio { get; set; }
 }

@@ -18,11 +18,13 @@ SolidCompression=yes
 PrivilegesRequired=admin
 DisableDirPage=no
 DisableProgramGroupPage=yes
-SetupIconFile=..\GymAdmin\GymAdmin.Desktop\Resources\Images\gymadmin_icon.ico
-ArchitecturesInstallIn64BitMode=x64
+#if FileExists("..\GymAdmin\GymAdmin.Desktop\Resources\Images\gymadmin_icon.ico")
+  SetupIconFile=..\GymAdmin\GymAdmin.Desktop\Resources\Images\gymadmin_icon.ico
+#endif
+ArchitecturesInstallIn64BitMode=x64compatible
 
 [Files]
-; Toma todo lo que dejó dotnet publish en /publish (carpeta al lado de /installer)
+; El workflow publica en: <repo_root>\publish
 Source: "..\publish\*"; DestDir: "{app}"; Flags: recursesubdirs ignoreversion
 
 [Icons]

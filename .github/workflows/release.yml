@@ -3,7 +3,17 @@ name: Build & Release GymAdmin (tag)
 on:
   push:
     tags:
-      - 'v*'   # ej: v1.0.3
+      - 'v*'     # ej: v1.0.3
+  workflow_dispatch:
+
+permissions:
+  contents: write        # para crear release y subir assets
+  pages: write           # para publicar en GitHub Pages
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
 
 jobs:
   build-package:
@@ -15,11 +25,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Extract version from tag
+      - name: Extract version from tag or input
         id: ver
         shell: pwsh
         run: |
-          $tag = "${{ github.ref_name }}"       # ej v1.0.3
+          $tag = "${{ github.ref_name }}"
+          if (-not $tag -or -not $tag.StartsWith("v")) { $tag = "v0.0.0" }
           $v = $tag.TrimStart('v')
           echo "VERSION=$v" >> $env:GITHUB_OUTPUT
 
@@ -31,7 +42,7 @@ jobs:
       - name: Restore
         run: dotnet restore "$env:SOLUTION"
 
-      - name: Publish (Release single-folder)
+      - name: Publish (Release, multi-file)
         run: dotnet publish "$env:SOLUTION" -c Release -p:Version=${{ steps.ver.outputs.VERSION }} -o publish
 
       - name: Install Inno Setup
@@ -41,14 +52,14 @@ jobs:
         shell: pwsh
         run: |
           $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
-          & $iscc "/DAppVersion=${{ steps.ver.outputs.VERSION }}" "installer\GymAdmin.iss"
-          # salida: installer\output\GymAdmin-<ver>-Setup.exe
+          & $iscc "/DAppVersion=${{ steps.ver.outputs.VERSION }}" "Installer\GymAdmin.iss"
+          # salida: Installer\output\GymAdmin-<ver>-Setup.exe
 
       - name: Compute MD5
         id: md5
         shell: pwsh
         run: |
-          $file = "installer\output\GymAdmin-${{ steps.ver.outputs.VERSION }}-Setup.exe"
+          $file = "Installer\output\GymAdmin-${{ steps.ver.outputs.VERSION }}-Setup.exe"
           $hash = (Get-FileHash $file -Algorithm MD5).Hash
           echo "MD5=$hash" >> $env:GITHUB_OUTPUT
 
@@ -60,9 +71,9 @@ jobs:
           draft: false
           prerelease: false
           files: |
-            installer/output/GymAdmin-${{ steps.ver.outputs.VERSION }}-Setup.exe
+            Installer/output/GymAdmin-${{ steps.ver.outputs.VERSION }}-Setup.exe
 
-      - name: Generate update.xml
+      - name: Generate site (update.xml + changelog)
         shell: pwsh
         run: |
           $ver = "${{ steps.ver.outputs.VERSION }}"
@@ -70,6 +81,7 @@ jobs:
           $repo = "${{ github.event.repository.name }}"
           $url = "https://github.com/$user/$repo/releases/download/v$ver/GymAdmin-$ver-Setup.exe"
           $md5 = "${{ steps.md5.outputs.MD5 }}"
+          New-Item -ItemType Directory -Force -Path site | Out-Null
           $xml = @"
 <?xml version="1.0" encoding="UTF-8"?>
 <item>
@@ -80,13 +92,15 @@ jobs:
   <checksum algorithm="MD5">$md5</checksum>
 </item>
 "@
-          New-Item -ItemType Directory -Force -Path site | Out-Null
           $xml | Out-File -Encoding UTF8 site/update.xml
           "GymAdmin $ver - cambios" | Out-File -Encoding UTF8 site/changelog-$ver.html
 
-      - name: Publish update.xml to GitHub Pages (gh-pages)
-        uses: peaceiris/actions-gh-pages@v4
+      # Publicar GitHub Pages vía acciones oficiales
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: site
-          publish_branch: gh-pages
+          path: site
+
+      - name: Deploy to GitHub Pages
+        id: deploy
+        uses: actions/deploy-pages@v4

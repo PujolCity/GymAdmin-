@@ -127,9 +127,7 @@ public partial class EditarSocioViewModel : ViewModelBase
             socio.UltimoPagoTexto = string.Concat(
                 socio.UltimoPagoTexto,
                 " - Plan: ",
-                socio.PlanNombre,
-                " - Precio $",
-                Convert.ToString(socio.PlanPrecio)
+                socio.PlanNombre
             );
 
         UltimoPagoTexto = socio.UltimoPagoTexto ?? "";

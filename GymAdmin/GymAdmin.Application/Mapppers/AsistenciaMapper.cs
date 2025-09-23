@@ -11,7 +11,7 @@ public static class AsistenciaMapper
         return new Asistencia
         {
             SocioId = createAsistenciaDto.IdSocio,
-            Entrada = DateTime.UtcNow,
+            Entrada = createAsistenciaDto.Fecha,
             Observaciones = createAsistenciaDto.Observaciones ?? string.Empty
         };
     }
