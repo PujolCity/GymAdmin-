@@ -1,6 +1,6 @@
 #define AppName "GymAdmin"
 #ifndef AppVersion
-  #define AppVersion "1.0.3"
+  #define AppVersion "1.0.4"
 #endif
 
 #define AppId "{{2D9A4723-B8E7-48F8-B02C-C6BAF326F03C}}"
