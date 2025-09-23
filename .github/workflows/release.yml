@@ -83,15 +83,15 @@ jobs:
           $md5 = "${{ steps.md5.outputs.MD5 }}"
           New-Item -ItemType Directory -Force -Path site | Out-Null
           $xml = @"
-<?xml version="1.0" encoding="UTF-8"?>
-<item>
-  <version>$ver</version>
-  <url>$url</url>
-  <changelog>https://$user.github.io/$repo/changelog-$ver.html</changelog>
-  <mandatory>false</mandatory>
-  <checksum algorithm="MD5">$md5</checksum>
-</item>
-"@
+          <?xml version="1.0" encoding="UTF-8"?>
+          <item>
+          <version>$ver</version>  
+          <url>$url</url>
+          <changelog>https://$user.github.io/$repo/changelog-$ver.html</changelog>
+          <mandatory>false</mandatory>
+          <checksum algorithm="MD5">$md5</checksum>
+          </item>
+          "@
           $xml | Out-File -Encoding UTF8 site/update.xml
           "GymAdmin $ver - cambios" | Out-File -Encoding UTF8 site/changelog-$ver.html
 
