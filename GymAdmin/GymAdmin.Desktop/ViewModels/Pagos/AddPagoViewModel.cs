@@ -75,7 +75,7 @@ public sealed partial class AddPagoViewModel : ViewModelBase, IDataErrorInfo, ID
             Precio = value.Precio.ToString(CultureInfo.InvariantCulture);
 
         if (value is not null && value.DiasValidez > 0 && !HasVencimientoInteracted)
-            FechaVencimiento = DateTime.Today.AddDays(value.DiasValidez);
+            FechaVencimiento = (FechaPago ?? DateTime.Today).Date.AddDays(value.DiasValidez);
 
         if (value is not null)
             CreditosAsignados = value.Creditos;
@@ -101,10 +101,13 @@ public sealed partial class AddPagoViewModel : ViewModelBase, IDataErrorInfo, ID
         GuardarCommand.NotifyCanExecuteChanged();
     }
 
-    [ObservableProperty] private DateTime? fechaPago = DateTime.UtcNow;
+    [ObservableProperty] private DateTime? fechaPago = DateTime.Now;
     partial void OnFechaPagoChanged(DateTime? value)
     {
         HasFechaPagoInteracted = true;
+        if (PlanSeleccionado is not null && PlanSeleccionado.DiasValidez > 0)
+            FechaVencimiento = (value ?? DateTime.Today).Date.AddDays(PlanSeleccionado.DiasValidez);
+
         OnPropertyChanged(nameof(FormularioValido));
         GuardarCommand.NotifyCanExecuteChanged();
     }
@@ -177,12 +180,12 @@ public sealed partial class AddPagoViewModel : ViewModelBase, IDataErrorInfo, ID
             };
             var planes = await _getPlanes.ExecuteAsync(planesReq, _cts.Token);
             Planes.Clear();
-            foreach (var p in planes.Items) 
+            foreach (var p in planes.Items)
                 Planes.Add(p);
 
             var metodos = await _getMetodosPago.ExecuteAsync(_cts.Token);
             MetodosPago.Clear();
-            foreach (var m in metodos) 
+            foreach (var m in metodos)
                 MetodosPago.Add(m);
         }
         catch (OperationCanceledException) { }
@@ -282,13 +285,13 @@ public sealed partial class AddPagoViewModel : ViewModelBase, IDataErrorInfo, ID
 
             _cts?.Cancel();
             _cts = new CancellationTokenSource();
-
+            var fechaPagoLocal = DateTime.SpecifyKind(FechaPago!.Value, DateTimeKind.Local);
             var dto = new PagoCreateDto
             {
                 SocioId = SocioSeleccionado!.Id,
                 PlanMembresiaId = PlanSeleccionado!.Id,
                 Precio = decimal.Parse(Precio, CultureInfo.InvariantCulture),
-                FechaPago = FechaPago!.Value,
+                FechaPago = fechaPagoLocal,
                 MetodoPagoId = MetodoSeleccionado!.Id,
                 Observaciones = string.IsNullOrWhiteSpace(Observaciones) ? null : Observaciones.Trim(),
                 CreditosAsignados = CreditosAsignados,

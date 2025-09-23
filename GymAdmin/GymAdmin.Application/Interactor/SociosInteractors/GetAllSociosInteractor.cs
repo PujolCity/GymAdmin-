@@ -50,8 +50,7 @@ public class GetAllSociosInteractor : IGetAllSociosInteractor
             ? DateTime.SpecifyKind(s.UltimoPago.Value, DateTimeKind.Utc)
             .ToLocalTime()
             .ToString("dd/MM/yyyy HH:mm") : "—",
-            PlanNombre = s.PlanNombre,  
-            PlanPrecio = s.PlanPrecio,
+            PlanNombre = s.PlanNombre
         }).ToList();
 
         return new PagedResult<SocioDto>

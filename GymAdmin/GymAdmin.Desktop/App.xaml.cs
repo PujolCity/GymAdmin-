@@ -50,7 +50,7 @@ public partial class App : Application
         AutoUpdater.Mandatory = false;
         AutoUpdater.ShowSkipButton = false;
         AutoUpdater.ShowRemindLaterButton = false;
-        AutoUpdater.Start("https://<USER>.github.io/<REPO>/update.xml");
+        AutoUpdater.Start("https://pujolcity.github.io/GymAdmin-/update.xml");
 
         // Mostrar ventana principal
         var mainWindow = _host.Services.GetRequiredService<MainWindow>();

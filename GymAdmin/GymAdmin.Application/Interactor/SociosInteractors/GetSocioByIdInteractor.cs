@@ -36,16 +36,13 @@ public class GetSocioByIdInteractor : IGetSocioByIdInteractor
             VigenciaTexto = result.Value.VigenciaTexto,
             FechaRegistro = result.Value.FechaRegistro.ToLocalTime().ToString("dd/MM/yyyy HH:mm"),
             Estado = result.Value.IsMembresiaExpirada ? "Inactivo" : "Activo",
-            PlanNombre = result.Value.PlanNombre,
-            PlanPrecio = result.Value.PlanPrecio
+            PlanNombre = result.Value.PlanNombre
         };
         if (!socioDto.UltimoPagoTexto.Equals("-"))
             socioDto.UltimoPagoTexto = string.Concat(
                 socioDto.UltimoPagoTexto,
                 " - Plan: ",
-                socioDto.PlanNombre,
-                " - Precio $",
-                Convert.ToString(socioDto.PlanPrecio)
+                socioDto.PlanNombre
             );
 
         return Result<SocioDto>.Ok(socioDto);

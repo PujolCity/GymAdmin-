@@ -10,7 +10,6 @@ public class CreateAsistenciaDtoValidation : AbstractValidator<CreateAsistenciaD
         RuleFor(x => x.IdSocio)
             .GreaterThan(0).WithMessage("El ID del socio es obligatorio y debe ser mayor que cero.");
         RuleFor(x => x.Fecha)
-            .NotEmpty().WithMessage("La fecha de la asistencia es obligatoria.")
-            .GreaterThan(DateTime.Now).WithMessage("La fecha de la asistencia no puede ser en el futuro.");
+            .NotEmpty().WithMessage("La fecha de la asistencia es obligatoria.");
     }
 }
