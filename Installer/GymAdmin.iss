@@ -24,7 +24,7 @@ DisableProgramGroupPage=yes
 ArchitecturesInstallIn64BitMode=x64compatible
 
 [Files]
-; El workflow publica en: <repo_root>\publish
+; El workflow deja el publish en <repo_root>\publish
 Source: "..\publish\*"; DestDir: "{app}"; Flags: recursesubdirs ignoreversion
 
 [Icons]
