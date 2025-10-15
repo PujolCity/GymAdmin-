@@ -67,11 +67,23 @@ jobs:
           $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
           & $iscc "/DAppVersion=${{ steps.ver.outputs.VERSION }}" "/DChannel=test" "Installer\GymAdmin.iss"
 
-      - name: Compute SHA256
+      - name: Debug: listar salida de Installer
+        shell: pwsh
+        run: Get-ChildItem -Recurse "Installer\output" | Select-Object FullName, Length
+
+      - name: Locate installer exe (TEST)
+        id: findexe
+        shell: pwsh
+        run: |
+          $exe = Get-ChildItem -Path "Installer\output" -Filter *.exe | Select-Object -First 1
+          if (-not $exe) { throw "Installer .exe not found in Installer\output" }
+          echo "FILE=$($exe.FullName)" >> $env:GITHUB_OUTPUT
+
+      - name: Compute SHA256 (TEST)
         id: sha
         shell: pwsh
         run: |
-          $file = "Installer\output\GymAdmin-${{ steps.ver.outputs.VERSION }}-Setup-Test.exe"
+          $file = "${{ steps.findexe.outputs.FILE }}"
           $hash = (Get-FileHash $file -Algorithm SHA256).Hash
           echo "SHA256=$hash" >> $env:GITHUB_OUTPUT
           echo "FILE=$file"   >> $env:GITHUB_OUTPUT
