@@ -25,6 +25,7 @@ public class GetSocioByIdInteractor : IGetSocioByIdInteractor
             Apellido = result.Value.Apellido,
             Nombre = result.Value.Nombre,
             Dni = result.Value.Dni,
+            Telefono = !String.IsNullOrEmpty(result.Value.TelefonoDecrypted) ? result.Value.TelefonoDecrypted : "-",
             CreditosRestantes = result.Value.CreditosRestantes,
             ExpiracionMembresia = result.Value.ExpiracionMembresia,
             UltimaAsistencia = result.Value.UltimaAsistencia,
@@ -35,7 +36,7 @@ public class GetSocioByIdInteractor : IGetSocioByIdInteractor
             TotalCreditosComprados = result.Value.TotalCreditosComprados,
             VigenciaTexto = result.Value.VigenciaTexto,
             FechaRegistro = result.Value.FechaRegistro.ToLocalTime().ToString("dd/MM/yyyy HH:mm"),
-            Estado = result.Value.IsMembresiaExpirada ? "Inactivo" : "Activo",
+            Estado = result.Value.IsActive ? "Activo" : "Inactivo",
             PlanNombre = result.Value.PlanNombre
         };
         if (!socioDto.UltimoPagoTexto.Equals("-"))

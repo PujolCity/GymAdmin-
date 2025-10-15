@@ -3,6 +3,7 @@ using System;
 using GymAdmin.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GymAdmin.Infrastructure.Migrations
 {
     [DbContext(typeof(GymAdminDbContext))]
-    partial class GymAdminDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250926023930_AddTelefonoEnSocio")]
+    partial class AddTelefonoEnSocio
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.8");
@@ -244,11 +247,6 @@ namespace GymAdmin.Infrastructure.Migrations
                     b.Property<DateTime>("FechaRegistro")
                         .HasColumnType("TEXT");
 
-                    b.Property<bool>("IsActive")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(false);
-
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("INTEGER");
 
@@ -259,9 +257,6 @@ namespace GymAdmin.Infrastructure.Migrations
 
                     b.Property<string>("Telefono")
                         .HasMaxLength(20)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("TelefonoHash")
                         .HasColumnType("TEXT");
 
                     b.Property<int>("TotalCreditosComprados")
@@ -277,9 +272,6 @@ namespace GymAdmin.Infrastructure.Migrations
                     b.HasIndex("DniEncrypted")
                         .IsUnique();
 
-                    b.HasIndex("Telefono")
-                        .IsUnique();
-
                     b.ToTable("Socios");
                 });
 
@@ -289,38 +281,23 @@ namespace GymAdmin.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<int?>("BackupRetentionCount")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("CarpetaBackups")
-                        .HasMaxLength(500)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("CarpetaBase")
-                        .HasMaxLength(500)
-                        .HasColumnType("TEXT");
-
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("CuitEncrypted")
-                        .IsRequired()
-                        .HasMaxLength(500)
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("TEXT");
+
+                    b.Property<int>("DiasValidezCredito")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(30);
 
                     b.Property<string>("Direccion")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("EmailContacto")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("IncluirNombreEnExport")
+                    b.Property<bool>("ExpiracionAutomaticaCredito")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER")
                         .HasDefaultValue(true);
@@ -333,26 +310,12 @@ namespace GymAdmin.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("PrefijoArchivos")
+                    b.Property<string>("Telefono")
                         .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT")
-                        .HasDefaultValue("GymAdmin_");
-
-                    b.Property<string>("TelefonoEncrypted")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime?>("UltimoBackupAt")
+                        .HasMaxLength(20)
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("WhatsAppEncrypted")
-                        .IsRequired()
-                        .HasMaxLength(500)
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");

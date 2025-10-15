@@ -1,0 +1,19 @@
+{
+  "profiles": {
+    "GymAdmin.Desktop": {
+      "commandName": "Project"
+    },
+    "GymAdmin.TEST": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "TEST"
+      }
+    },
+    "GymAdmin.PROD": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "PROD"
+      }
+    }
+  }
+}

@@ -18,6 +18,8 @@ public class SocioCreateDtoValidator : AbstractValidator<SocioCreateDto>
         RuleFor(s => s.Apellido)
             .NotEmpty().WithMessage("El apellido es obligatorio.")
             .MaximumLength(50).WithMessage("El apellido no puede exceder los 50 caracteres.");
-        
+
+        RuleFor(s => s.Telefono)
+            .Matches(@"^\+?\d{0,15}$").WithMessage("El teléfono no es válido.");
     }
 }

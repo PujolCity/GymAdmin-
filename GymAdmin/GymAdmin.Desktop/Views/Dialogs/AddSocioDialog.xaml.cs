@@ -38,6 +38,17 @@ namespace GymAdmin.Desktop.Views.Dialogs
                 if (newText.Length > 8) e.Handled = true;
             }
         }
+        
+        private void TelefonoTextBox_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            e.Handled = !e.Text.All(char.IsDigit);
+
+            if (!e.Handled && sender is TextBox tb)
+            {
+                var newText = GetTextAfterInput(tb, e.Text);
+                if (newText.Length > 15) e.Handled = true;
+            }
+        }
 
         private void TextBox_Pasting(object sender, DataObjectPastingEventArgs e)
         {

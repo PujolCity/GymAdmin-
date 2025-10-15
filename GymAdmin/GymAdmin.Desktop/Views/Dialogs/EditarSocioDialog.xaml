@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="GymAdmin.Desktop.Views.Dialogs.EditarSocioDialog"
+﻿ <UserControl x:Class="GymAdmin.Desktop.Views.Dialogs.EditarSocioDialog"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
@@ -77,6 +77,24 @@
                         <TextBox Text="{Binding Apellido}"
                                  PreviewTextInput="NombreTextBox_PreviewTextInput"/>
 
+                        <TextBlock Text="Telefono" Style="{StaticResource LabelMuted}" Margin="0,6,0,0"/>
+
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBox Text="{Binding Telefono, 
+                                UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
+                                     Width="220"
+                                     PreviewTextInput="NombreTextBox_PreviewTextInput"
+                                     DataObject.Pasting="TextBox_Pasting"
+                                     VerticalAlignment="Center"/>
+
+                            <Button Width="36" Height="36" Margin="8,0,0,0"
+                                    ToolTip="Enviar WhatsApp"
+                                    Command="{Binding EnviarWhatsappCommand}"
+                                    Background="White" BorderThickness="1">
+                                <fa:IconImage Icon="Whatsapp" Width="18" Height="18" Foreground="#25D366"/>
+                            </Button>
+                        </StackPanel>
+
                         <!-- Estado + Créditos -->
                         <Grid Margin="0,10,0,0">
                             <Grid.ColumnDefinitions>
@@ -102,6 +120,8 @@
 
                         <TextBlock Text="Vigencia" Style="{StaticResource LabelMuted}" Margin="0,10,0,0"/>
                         <TextBlock Text="{Binding VigenciaTexto}" />
+                        <TextBlock Text="Fecha Alta" Style="{StaticResource LabelMuted}" Margin="0,10,0,0"/>
+                        <TextBlock Text="{Binding FechaRegistro }" />
 
                         <TextBlock Text="Último pago" Style="{StaticResource LabelMuted}" Margin="0,10,0,0"/>
                         <TextBlock>

@@ -1,17 +1,31 @@
-#define AppName "GymAdmin"
-#ifndef AppVersion
-  #define AppVersion "1.0.4"
+; ====== Canal (prod/test) pasado por /DChannel en línea de comando ======
+#ifndef Channel
+  #define Channel "prod"
 #endif
 
-#define AppId "{{2D9A4723-B8E7-48F8-B02C-C6BAF326F03C}}"
+#if Channel == "prod"
+  #define AppName "GymAdmin"
+  #define AppId   "{{2D9A4723-B8E7-48F8-B02C-C6BAF326F03C}}"   
+  #define SetupSuffix ""
+  #define InstallDir  "{autopf}\GymAdmin"
+#else
+  #define AppName "GymAdmin Test"
+  #define AppId   "{{A7F2B9EF-3C3F-4D34-9A7D-6B3E9E3B1234}}"  
+  #define SetupSuffix "-Test"
+  #define InstallDir  "{autopf}\GymAdmin Test"
+#endif
+
+#ifndef AppVersion
+  #define AppVersion "1.0.0"
+#endif
 
 [Setup]
 AppId={#AppId}
 AppName={#AppName}
 AppVersion={#AppVersion}
-DefaultDirName={autopf}\{#AppName}
+DefaultDirName={#InstallDir}
 DefaultGroupName={#AppName}
-OutputBaseFilename={#AppName}-{#AppVersion}-Setup
+OutputBaseFilename={#AppName}-{#AppVersion}-Setup{#SetupSuffix}
 OutputDir=output
 Compression=lzma
 SolidCompression=yes
