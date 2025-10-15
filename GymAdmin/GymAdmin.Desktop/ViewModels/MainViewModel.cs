@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FontAwesome.Sharp;
+using GymAdmin.Desktop.ViewModels.Configuracion;
 using GymAdmin.Desktop.ViewModels.Membresias;
 using GymAdmin.Desktop.ViewModels.Pagos;
 using GymAdmin.Desktop.ViewModels.Socios;

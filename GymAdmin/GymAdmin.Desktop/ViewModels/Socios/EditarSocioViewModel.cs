@@ -9,6 +9,8 @@ using GymAdmin.Desktop.ViewModels.Asistencia;
 using GymAdmin.Desktop.ViewModels.Dialogs;
 using GymAdmin.Desktop.Views.Dialogs;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.Text.RegularExpressions;
 using System.Windows;
 
 namespace GymAdmin.Desktop.ViewModels.Socios;
@@ -17,6 +19,7 @@ public partial class EditarSocioViewModel : ViewModelBase
 {
     private const string COLOR_ROJO = "DangerButtonStyle";
     private const string COLOR_PRIMARIO = "PrimaryButtonStyle";
+    private const string WPP_URL = "https://wa.me";
 
     private readonly IUpdateSocioInteractor _updateSocio;
     private readonly IGetAsistenciasBySocioInteractor _getAsistencias;
@@ -26,8 +29,6 @@ public partial class EditarSocioViewModel : ViewModelBase
     private readonly IUpdateAsistenciaInteractor _updateAsistencia;
 
     private CancellationTokenSource? _cts;
-    private readonly IServiceProvider _sp;
-
     public event Action? CloseRequested;
 
     [ObservableProperty] private int id;
@@ -38,9 +39,34 @@ public partial class EditarSocioViewModel : ViewModelBase
     [ObservableProperty] private int creditosRestantes;
     [ObservableProperty] private DateTime? expiracionMembresiaLocal;
     [ObservableProperty] private string vigenciaTexto = "";
+    [ObservableProperty] private string fechaRegistro = "";
     [ObservableProperty] private string ultimoPagoTexto;
     [ObservableProperty] private int totalCreditosComprados;
 
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(EnviarWhatsappCommand))]
+    private string telefono = "";
+
+    [RelayCommand(CanExecute = nameof(CanEnviarWhatsapp))]
+    private void EnviarWhatsapp()
+    {
+        var numero = NormalizarTelefonoParaWaMe(Telefono);
+        if (string.IsNullOrEmpty(numero)) return;
+
+        var url = $"{WPP_URL}/{numero}";
+        try
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = url,
+                UseShellExecute = true
+            });
+        }
+        catch
+        {
+            // TODO: Mostrar mensaje al usuario si querés
+        }
+    }
     // --- Paginación asistencias ---
     public ObservableCollection<AsistenciaRow> Asistencias { get; } = new();
     public ObservableCollection<int> PageSizes { get; } = new(new[] { 10, 25, 50, 100 });
@@ -92,7 +118,6 @@ public partial class EditarSocioViewModel : ViewModelBase
     public EditarSocioViewModel(
         IUpdateSocioInteractor updateSocio,
         IGetAsistenciasBySocioInteractor getAsistencias,
-        IServiceProvider sp,
         ICreateAsistenciaInteractor createAsistencia,
         IGetSocioByIdInteractor getSocioById,
         IDeleteAsistenciaInteractor deleteAsistencia
@@ -106,7 +131,6 @@ public partial class EditarSocioViewModel : ViewModelBase
         _deleteAsistencia = deleteAsistencia;
 
         _ = LoadAsistenciasAsync();
-        _sp = sp;
 
         BindBusyToCommands(GoFirstPageCommand, GoPrevPageCommand, GoNextPageCommand,
                            GoLastPageCommand);
@@ -119,6 +143,7 @@ public partial class EditarSocioViewModel : ViewModelBase
         Dni = socio.Dni;
         Nombre = socio.Nombre;
         Apellido = socio.Apellido;
+        Telefono = socio.Telefono;
         Estado = socio.Estado;
         CreditosRestantes = socio.CreditosRestantes;
         VigenciaTexto = socio.VigenciaTexto ?? "";
@@ -131,11 +156,35 @@ public partial class EditarSocioViewModel : ViewModelBase
             );
 
         UltimoPagoTexto = socio.UltimoPagoTexto ?? "";
-
+        FechaRegistro = socio.FechaRegistro;
         PageNumber = 1;
         await LoadAsistenciasAsync(ct);
     }
-    
+    private bool CanEnviarWhatsapp()
+    {
+        var numero = NormalizarTelefonoParaWaMe(Telefono);
+        return !string.IsNullOrWhiteSpace(numero) && numero.Length >= 8;
+    }
+
+
+    // --- Sanitiza a dígitos para wa.me. Si el usuario ya pone el internacional (ej. 549...), se respeta.
+    private static string NormalizarTelefonoParaWaMe(string raw)
+    {
+        if (string.IsNullOrWhiteSpace(raw)) return null;
+
+        var digits = Regex.Replace(raw, "[^0-9]", "");
+
+        if (digits.StartsWith("0") && !digits.StartsWith("00"))
+        {
+            digits = "54" + digits.TrimStart('0');
+        }
+
+        if (digits.StartsWith("00"))
+            digits = digits.Substring(2);
+
+        return string.IsNullOrEmpty(digits) ? null : digits;
+    }
+
     private async Task ReloadSocioHeaderAsync(CancellationToken ct = default)
     {
         var result = await _getSocioById.ExecuteAsync(Id, ct);
@@ -144,6 +193,7 @@ public partial class EditarSocioViewModel : ViewModelBase
         Dni = socio.Dni;
         Nombre = socio.Nombre;
         Apellido = socio.Apellido;
+        Telefono = socio.Telefono;
         Estado = socio.Estado;
         CreditosRestantes = socio.CreditosRestantes;
         VigenciaTexto = socio.VigenciaTexto ?? "";
@@ -207,7 +257,8 @@ public partial class EditarSocioViewModel : ViewModelBase
                 Id = Id,
                 Dni = Dni,
                 Nombre = Nombre,
-                Apellido = Apellido
+                Apellido = Apellido,
+                Telefono = Telefono
             };
 
             var result = await _updateSocio.ExecuteAsync(cmd, CancellationToken.None);

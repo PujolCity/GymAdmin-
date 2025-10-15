@@ -14,7 +14,8 @@ public static class SocioMapper
             Nombre = socioDto.Nombre,
             Apellido = socioDto.Apellido,
             Dni = socioDto.Dni,
-            ExpiracionMembresia = DateTime.UtcNow.AddDays(-1) 
+            Telefono = socioDto.Telefono,
+            ExpiracionMembresia = DateTime.UtcNow.AddDays(-1)
         };
     }
 
@@ -25,6 +26,7 @@ public static class SocioMapper
             Nombre = socio.Nombre,
             Apellido = socio.Apellido,
             Dni = socio.Dni,
+            Telefono = socio.Telefono
         };
     }
     public static Socio ToSocio(this BaseDeleteRequest request)
@@ -41,7 +43,7 @@ public static class SocioMapper
         {
             Id = s.Id,
             NombreCompleto = $"{s.Apellido}, {s.Nombre}",
-            Dni = s.Dni 
+            Dni = s.Dni
         };
     }
 }

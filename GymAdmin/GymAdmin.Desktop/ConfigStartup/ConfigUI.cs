@@ -1,5 +1,6 @@
 ﻿using GymAdmin.Desktop.ViewModels;
 using GymAdmin.Desktop.ViewModels.Asistencia;
+using GymAdmin.Desktop.ViewModels.Configuracion;
 using GymAdmin.Desktop.ViewModels.Dialogs;
 using GymAdmin.Desktop.ViewModels.Membresias;
 using GymAdmin.Desktop.ViewModels.Pagos;

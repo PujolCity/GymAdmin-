@@ -64,7 +64,8 @@ public class SocioService : ISocioService
             socioUpdate.Nombre = socio.Nombre;
             socioUpdate.Apellido = socio.Apellido;
             socioUpdate.Dni = socio.Dni;
-
+            socioUpdate.Telefono = socio.Telefono;
+            socioUpdate.IsActive = socio.IsActive;
             _unitOfWork.SocioRepo.Update(socioUpdate);
             await _unitOfWork.CommitAsync(ct);
 
@@ -126,10 +127,8 @@ public class SocioService : ISocioService
 
         if (filter.Status != StatusFilter.Todos)
         {
-            var nowUtc = DateTime.UtcNow;
-            sociosQuery = filter.Status == StatusFilter.Activo
-                ? sociosQuery.Where(s => s.ExpiracionMembresia != null && s.ExpiracionMembresia >= nowUtc)
-                : sociosQuery.Where(s => s.ExpiracionMembresia == null || s.ExpiracionMembresia < nowUtc);
+            sociosQuery = filter.Status == StatusFilter.Activo ? sociosQuery.Where(pm => pm.IsActive)
+                                                     : sociosQuery.Where(pm => !pm.IsActive);
         }
 
         var total = await sociosQuery.CountAsync(ct);
@@ -141,7 +140,7 @@ public class SocioService : ISocioService
 
             UltimoPagoInfo = s.Pagos
                 .Where(p => !p.IsDeleted)
-                .OrderByDescending(p => p.FechaPago)                 
+                .OrderByDescending(p => p.FechaPago)
                 .Select(p => new
                 {
                     p.FechaPago,
@@ -193,7 +192,7 @@ public class SocioService : ISocioService
             var socio = x.Socio;
 
             if (socio is IEncryptableEntity enc)
-                enc.HandleDecryption(_cryptoService); 
+                enc.HandleDecryption(_cryptoService);
 
             socio.UltimaAsistencia = x.UltimaAsistencia;
 
@@ -203,7 +202,7 @@ public class SocioService : ISocioService
 
                 socio.PlanNombre = string.IsNullOrWhiteSpace(x.UltimoPagoInfo.PlanNombre) ? "—" : x.UltimoPagoInfo.PlanNombre;
 
-                socio.PlanPrecio = x.UltimoPagoInfo.Precio; 
+                socio.PlanPrecio = x.UltimoPagoInfo.Precio;
             }
             else
             {
@@ -263,7 +262,7 @@ public class SocioService : ISocioService
 
         var socio = data.Socio;
         socio.PlanNombre = data.UltimoPago?.PlanNombre ?? "—";
-        socio.PlanPrecio = data.UltimoPago?.Precio ?? 0m;   
+        socio.PlanPrecio = data.UltimoPago?.Precio ?? 0m;
 
         if (socio is IEncryptableEntity enc)
             enc.HandleDecryption(_cryptoService);

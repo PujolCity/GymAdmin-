@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 namespace GymAdmin.Infrastructure.Data;
 
 // COMANDO PARA MIGRACIONES EN CONSOLA DE GESTIÓN DE PAQUETES:
-// Add-Migration ExpiracionNulleable -Project GymAdmin.Infrastructure -StartupProject GymAdmin.Desktop
+// Add-Migration NewMigration -Project GymAdmin.Infrastructure -StartupProject GymAdmin.Desktop
 
 public class GymAdminDbContext : DbContext
 {
@@ -64,6 +64,9 @@ public class GymAdminDbContext : DbContext
                 .IsRequired()
                 .HasMaxLength(50);
 
+            entity.Property(m => m.Telefono)
+                .HasMaxLength(20);
+
             entity.Property(e => e.DniEncrypted).IsRequired();
 
             entity.Property(m => m.FechaRegistro)
@@ -76,10 +79,16 @@ public class GymAdminDbContext : DbContext
                 .HasDefaultValue(0);
 
             entity.Property(m => m.ExpiracionMembresia);
+            
+            entity.Property(m => m.IsActive)
+                .HasDefaultValue(false);
 
             // Índices únicos
             entity.HasIndex(m => m.DniEncrypted)
                 .IsUnique();
+
+            entity.HasIndex(m => m.Telefono)
+            .IsUnique();
 
             // Relaciones
             entity.HasMany(m => m.Pagos)
@@ -198,19 +207,36 @@ public class GymAdminDbContext : DbContext
             entity.HasKey(sc => sc.Id);
 
             entity.Property(sc => sc.NombreGimnasio)
-                .HasMaxLength(100);
+                .HasMaxLength(100)
+                .IsRequired();
 
             entity.Property(sc => sc.Direccion)
                 .HasMaxLength(200);
 
-            entity.Property(sc => sc.Telefono)
-                .HasMaxLength(20);
+            entity.Property(sc => sc.TelefonoEncrypted);
 
-            entity.Property(sc => sc.DiasValidezCredito)
-                .HasDefaultValue(30);
+            entity.Property(sc => sc.WhatsAppEncrypted)
+                .HasMaxLength(500);
 
-            entity.Property(sc => sc.ExpiracionAutomaticaCredito)
+            entity.Property(sc => sc.CuitEncrypted)
+                .HasMaxLength(500);
+
+            entity.Property(sc => sc.CarpetaBase)
+                .HasMaxLength(500);
+
+            entity.Property(sc => sc.CarpetaBackups)
+                .HasMaxLength(500);
+
+            entity.Property(sc => sc.UltimoBackupAt);
+
+            entity.Property(sc => sc.PrefijoArchivos)
+           .HasMaxLength(50)
+           .HasDefaultValue("GymAdmin_");
+
+            entity.Property(sc => sc.IncluirNombreEnExport)
                 .HasDefaultValue(true);
+
+            entity.Property(sc => sc.BackupRetentionCount);
         });
 
         // Configuración de User

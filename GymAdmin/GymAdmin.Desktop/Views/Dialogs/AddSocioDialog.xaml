@@ -56,6 +56,14 @@
                    PreviewTextInput="NombreTextBox_PreviewTextInput"
                    Style="{StaticResource ValidatedTextBoxStyle}"/>
 
+                    <!-- Telefono -->
+                    <TextBlock Text="Telefono*" Margin="0 15 0 0"/>
+                    <TextBox x:Name="TelefonoTextBox"
+                   Text="{Binding Telefono, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
+                   PreviewTextInput="TelefonoTextBox_PreviewTextInput"
+                   DataObject.Pasting="TextBox_Pasting"
+                   Style="{StaticResource ValidatedTextBoxStyle}"/>
+
                 </StackPanel>
             </ScrollViewer>
 

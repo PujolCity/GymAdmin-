@@ -1,0 +1,127 @@
+name: Release PROD (tag)
+
+on:
+  push:
+    tags: ['v*']          # ej: v1.2.3
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Versión manual (ej: 1.2.3). Dejalo vacío si corrés con tag.'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: windows-latest
+    env:
+      SOLUTION: GymAdmin/GymAdmin.Desktop/GymAdmin.Desktop.csproj
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Extract version (tag o input)
+        id: ver
+        shell: pwsh
+        run: |
+          $manual = "${{ github.event.inputs.version }}"
+          $tag = "${{ github.ref_name }}"
+          if ($manual) {
+            $v = $manual
+          } elseif ($tag -and $tag.StartsWith("v")) {
+            $v = $tag.TrimStart('v')
+          } else {
+            $v = "0.0.0"
+          }
+          echo "VERSION=$v" >> $env:GITHUB_OUTPUT
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        run: dotnet restore "$env:SOLUTION"
+
+      - name: Publish (self-contained)
+        run: dotnet publish "$env:SOLUTION" -c Release -r win-x64 --self-contained true -p:PublishSingleFile=false -p:PublishTrimmed=false -p:Version=${{ steps.ver.outputs.VERSION }} -o publish
+
+      # PROD usa appsettings.json
+      - name: Prepare channel config (prod)
+        shell: pwsh
+        run: Copy-Item "GymAdmin/GymAdmin.Desktop/appsettings.json" "publish/appsettings.json" -Force
+
+      - name: Install Inno Setup
+        run: choco install innosetup --yes
+
+      - name: Build Installer (Inno Setup) - PROD
+        shell: pwsh
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          & $iscc "/DAppVersion=${{ steps.ver.outputs.VERSION }}" "/DChannel=prod" "Installer\GymAdmin.iss"
+
+      - name: Compute SHA256
+        id: sha
+        shell: pwsh
+        run: |
+          $file = "Installer\output\GymAdmin-${{ steps.ver.outputs.VERSION }}-Setup.exe"
+          $hash = (Get-FileHash $file -Algorithm SHA256).Hash
+          echo "SHA256=$hash" >> $env:GITHUB_OUTPUT
+          echo "FILE=$file"   >> $env:GITHUB_OUTPUT
+
+      - name: Create/Update Release (attach installer)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: "GymAdmin ${{ steps.ver.outputs.VERSION }}"
+          draft: false
+          prerelease: false
+          files: |
+            ${{ steps.sha.outputs.FILE }}
+
+      - name: Generate site (update.xml + changelog)
+        shell: pwsh
+        run: |
+          $ver = "${{ steps.ver.outputs.VERSION }}"
+          $user = "${{ github.repository_owner }}"
+          $repo = "${{ github.event.repository.name }}"
+          $url = "https://github.com/$user/$repo/releases/download/v$ver/GymAdmin-$ver-Setup.exe"
+          $sha = "${{ steps.sha.outputs.SHA256 }}"
+          New-Item -ItemType Directory -Force -Path site | Out-Null
+          $xml = @"
+          <?xml version="1.0" encoding="UTF-8"?>
+          <item>
+          <version>$ver</version>
+          <url>$url</url>
+          <changelog>https://$user.github.io/$repo/changelog-$ver.html</changelog>
+          <mandatory>false</mandatory>
+          <checksum algorithm="SHA256">$sha</checksum>
+          </item>
+          "@
+          $xml | Out-File -Encoding UTF8 site/update.xml
+          "GymAdmin $ver - cambios" | Out-File -Encoding UTF8 site/changelog-$ver.html
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    environment:
+      name: github-pages      # habilitar main y tags v* en el environment
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

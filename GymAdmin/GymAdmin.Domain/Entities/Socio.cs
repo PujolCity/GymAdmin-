@@ -8,14 +8,18 @@ public class Socio : EntityBase, IEncryptableEntity
     public string DniEncrypted { get; set; } = string.Empty;
     public string Nombre { get; set; }
     public string Apellido { get; set; }
+    public string? Telefono { get; set; } = string.Empty;
     public DateTime FechaRegistro { get; set; } = DateTime.UtcNow;
     public string DniHash { get; set; } = null!;
     public int CreditosRestantes { get; set; }
     public int TotalCreditosComprados { get; set; }
     public DateTime? ExpiracionMembresia { get; set; } = DateTime.UtcNow.AddDays(-1);
+    public bool IsActive { get; set; } = false;
+    public string? TelefonoHash { get; set; } = string.Empty;
 
     [NotMapped] public string Dni { get; set; }
     [NotMapped] public DateTime? UltimaAsistencia { get; set; }
+    [NotMapped] public string? TelefonoDecrypted { get; set; } = string.Empty;
 
     [NotMapped]
     public string VigenciaTexto
@@ -52,18 +56,24 @@ public class Socio : EntityBase, IEncryptableEntity
                        : now;
 
         ExpiracionMembresia = baseDate.AddDays(validityDays);
+        IsActive = true;
     }
+
     public void AplicaCompraReseteando(int credits, DateTime nuevaExpiracionUtc)
     {
         CreditosRestantes = credits;
         TotalCreditosComprados += credits;
         ExpiracionMembresia = nuevaExpiracionUtc;
+        IsActive = true;
     }
 
     public void HandleDecryption(ICryptoService cryptoService)
     {
         if (!string.IsNullOrEmpty(DniEncrypted))
             Dni = cryptoService.Decrypt(DniEncrypted);
+        
+        if (!string.IsNullOrEmpty(Telefono))
+            TelefonoDecrypted = cryptoService.Decrypt(Telefono);
     }
 
     public void HandleEncryption(ICryptoService cryptoService)
@@ -72,6 +82,12 @@ public class Socio : EntityBase, IEncryptableEntity
         {
             DniEncrypted = cryptoService.Encrypt(Dni);
             DniHash = cryptoService.ComputeHash(Dni);
+
+        }
+        if (TelefonoDecrypted != null)
+        {
+            Telefono = string.IsNullOrEmpty(Telefono) ? string.Empty : cryptoService.Encrypt(Telefono);
+            TelefonoHash = string.IsNullOrEmpty(TelefonoDecrypted) ? string.Empty : cryptoService.ComputeHash(TelefonoDecrypted);
         }
     }
 
@@ -81,7 +97,10 @@ public class Socio : EntityBase, IEncryptableEntity
     public void ExpireIfNeeded()
     {
         if (IsMembresiaExpirada && CreditosRestantes > 0)
+        {
             CreditosRestantes = 0;
+            IsActive = false;
+        }
     }
 
     public bool UsarCredito()

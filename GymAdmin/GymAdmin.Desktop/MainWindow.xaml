@@ -18,6 +18,7 @@
         xmlns:viewModels="clr-namespace:GymAdmin.Desktop.ViewModels"
         xmlns:sociosVM="clr-namespace:GymAdmin.Desktop.ViewModels.Socios"
         xmlns:membresiasVM="clr-namespace:GymAdmin.Desktop.ViewModels.Membresias"
+        xmlns:configV="clr-namespace:GymAdmin.Desktop.ViewModels.Configuracion"
         xmlns:pagosVM="clr-namespace:GymAdmin.Desktop.ViewModels.Pagos">
 
     <Window.Resources>
@@ -33,7 +34,7 @@
             <views:PagosView/>
         </DataTemplate>
 
-        <DataTemplate DataType="{x:Type viewModels:ConfigViewModel}">
+        <DataTemplate DataType="{x:Type configV:ConfigViewModel}">
             <views:ConfiguracionView/>
         </DataTemplate>
         
