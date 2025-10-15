@@ -101,26 +101,29 @@ jobs:
       - name: Generate site (update-test.xml)
         shell: pwsh
         run: |
-          $ver = "${{ steps.ver.outputs.VERSION }}"
-          $user = "${{ github.repository_owner }}"
-          $repo = "${{ github.event.repository.name }}"
-          $url = "https://github.com/$user/$repo/releases/download/test-$ver/GymAdmin-$ver-Setup-Test.exe"
-          $sha = "${{ steps.sha.outputs.SHA256 }}"
+          $ver   = "${{ steps.ver.outputs.VERSION }}"
+          $user  = "${{ github.repository_owner }}"
+          $repo  = "${{ github.event.repository.name }}"
+          $file  = "${{ steps.sha.outputs.FILE }}"
+          $name  = Split-Path -Leaf $file  # <-- nombre real del .exe adjuntado al release
+          $sha   = "${{ steps.sha.outputs.SHA256 }}"
+
           New-Item -ItemType Directory -Force -Path site-test | Out-Null
+
           $xml = @"
           <?xml version="1.0" encoding="UTF-8"?>
           <item>
           <version>$ver</version>
-          <url>$url</url>
+          <url>https://github.com/$user/$repo/releases/download/test-$ver/$name</url>
           <changelog>https://$user.github.io/$repo/changelog-$ver-test.html</changelog>
           <mandatory>false</mandatory>
           <checksum algorithm="SHA256">$sha</checksum>
           </item>
           "@
+
           $xml | Out-File -Encoding UTF8 site-test/update-test.xml
           "GymAdmin $ver (test) - cambios" | Out-File -Encoding UTF8 site-test/changelog-$ver-test.html -Force
-
-      - name: Upload Pages artifact (test)
+          - name: Upload Pages artifact (test)
         uses: actions/upload-pages-artifact@v3
         with:
           path: site-test
