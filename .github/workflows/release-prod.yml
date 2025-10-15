@@ -63,11 +63,11 @@ jobs:
       - name: Install Inno Setup
         run: choco install innosetup --yes
 
-      - name: Build Installer (Inno Setup) - PROD
+      - name: Build Installer (Inno Setup)
         shell: pwsh
         run: |
           $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
-          & $iscc "/DAppVersion=${{ steps.ver.outputs.VERSION }}" "/DChannel=prod" "Installer\GymAdmin.iss"
+          & $iscc "/DAppVersion=${{ steps.ver.outputs.VERSION }}" "/DChannel=${{ matrix.channel }}" "Installer\GymAdmin.iss"
 
       - name: Compute SHA256
         id: sha
