@@ -11,14 +11,16 @@
   #define Channel "prod"
 #endif
 
+#define BaseName "GymAdmin"            ; <-- nombre base de archivo, sin espacios
+
 #if Channel == "prod"
   #define AppName "GymAdmin"
-  #define AppId   "{{2D9A4723-B8E7-48F8-B02C-C6BAF326F03C}}"   ; GUID PROD (fijo)
+  #define AppId   "{{2D9A4723-B8E7-48F8-B02C-C6BAF326F03C}}"
   #define SetupSuffix ""
   #define InstallDir  "{autopf}\GymAdmin"
 #else
   #define AppName "GymAdmin Test"
-  #define AppId   "{{A7F2B9EF-3C3F-4D34-9A7D-6B3E9E3B1234}}"   ; GUID TEST (fijo)
+  #define AppId   "{{A7F2B9EF-3C3F-4D34-9A7D-6B3E9E3B1234}}"
   #define SetupSuffix "-Test"
   #define InstallDir  "{autopf}\GymAdmin Test"
 #endif
@@ -27,18 +29,14 @@
   #define AppVersion "1.0.0"
 #endif
 
-; ==============================================================
-; CONFIGURACIÓN DE INSTALACIÓN
-; ==============================================================
-
 [Setup]
 AppId={#AppId}
 AppName={#AppName}
 AppVersion={#AppVersion}
 DefaultDirName={#InstallDir}
 DefaultGroupName={#AppName}
-OutputBaseFilename={#AppName}-{#AppVersion}-Setup{#SetupSuffix}
-; output folder relativo al .iss
+; <-- usar BaseName para el archivo físico, no AppName
+OutputBaseFilename={#BaseName}-{#AppVersion}-Setup{#SetupSuffix}
 OutputDir={#SourcePath}\output
 Compression=lzma
 SolidCompression=yes
