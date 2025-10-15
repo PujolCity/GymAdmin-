@@ -11,7 +11,7 @@
   #define Channel "prod"
 #endif
 
-#define BaseName "GymAdmin"            ; <-- nombre base de archivo, sin espacios
+#define BaseName "GymAdmin"    ; <-- nombre base del archivo .exe
 
 #if Channel == "prod"
   #define AppName "GymAdmin"
@@ -35,8 +35,7 @@ AppName={#AppName}
 AppVersion={#AppVersion}
 DefaultDirName={#InstallDir}
 DefaultGroupName={#AppName}
-; <-- usar BaseName para el archivo físico, no AppName
-OutputBaseFilename={#BaseName}-{#AppVersion}-Setup{#SetupSuffix}
+OutputBaseFilename={#BaseName}-{#AppVersion}-Setup{#SetupSuffix}  
 OutputDir={#SourcePath}\output
 Compression=lzma
 SolidCompression=yes
