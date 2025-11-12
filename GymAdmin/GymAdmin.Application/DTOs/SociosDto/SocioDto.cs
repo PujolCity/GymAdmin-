@@ -6,6 +6,7 @@ public class SocioDto
     public string Dni { get; set; }
     public string Nombre { get; set; }
     public string Apellido { get; set; }
+    public string Telefono { get; set; }
     public string NombreCompleto => $"{Apellido} {Nombre}";
     public string Estado { get; set; } = "Inactivo";
     public int CreditosRestantes { get; set; }

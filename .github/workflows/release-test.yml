@@ -1,0 +1,136 @@
+name: Release TEST (branch desarrollo)
+
+on:
+  push:
+    branches: ['desarrollo']   # o 'develop'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Versión manual (ej: 0.0.123 para test). Si lo dejás vacío se usa 0.0.<runNumber>'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages-test"
+  cancel-in-progress: true
+
+jobs:
+  build-test:
+    runs-on: windows-latest
+    env:
+      SOLUTION: GymAdmin/GymAdmin.Desktop/GymAdmin.Desktop.csproj
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Compute TEST version
+        id: ver
+        shell: pwsh
+        run: |
+          $manual = "${{ github.event.inputs.version }}"
+          if ($manual) {
+            $v = $manual
+          } else {
+            $v = "0.0.$(${env:GITHUB_RUN_NUMBER})"
+          }
+          echo "VERSION=$v" >> $env:GITHUB_OUTPUT
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        run: dotnet restore "$env:SOLUTION"
+
+      - name: Publish (self-contained)
+        run: dotnet publish "$env:SOLUTION" -c Release -r win-x64 --self-contained true -p:PublishSingleFile=false -p:PublishTrimmed=false -p:Version=${{ steps.ver.outputs.VERSION }} -o publish
+
+      # TEST usa appsettings.Test.json (apunta a update-test.xml)
+      - name: Prepare channel config (test)
+        shell: pwsh
+        run: Copy-Item "GymAdmin/GymAdmin.Desktop/appsettings.Test.json" "publish/appsettings.json" -Force
+
+      - name: Install Inno Setup
+        run: choco install innosetup --yes
+
+      - name: Build Installer (Inno Setup) - TEST
+        shell: pwsh
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          & $iscc "/DAppVersion=${{ steps.ver.outputs.VERSION }}" "/DChannel=test" "Installer\GymAdmin.iss"
+
+      - name: Locate installer exe (TEST)
+        id: findexe
+        shell: pwsh
+        run: |
+          $exe = Get-ChildItem -Path "Installer\output" -Filter *.exe | Select-Object -First 1
+          if (-not $exe) { throw "Installer .exe not found in Installer\output" }
+          echo "FILE=$($exe.FullName)" >> $env:GITHUB_OUTPUT
+
+      - name: Compute SHA256 (TEST)
+        id: sha
+        shell: pwsh
+        run: |
+          $file = "${{ steps.findexe.outputs.FILE }}"
+          $hash = (Get-FileHash $file -Algorithm SHA256).Hash
+          echo "SHA256=$hash" >> $env:GITHUB_OUTPUT
+          echo "FILE=$file"   >> $env:GITHUB_OUTPUT
+
+      - name: Create/Update TEST Release (prerelease)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: test-${{ steps.ver.outputs.VERSION }}
+          name: "GymAdmin TEST ${{ steps.ver.outputs.VERSION }}"
+          draft: false
+          prerelease: true
+          files: |
+            ${{ steps.sha.outputs.FILE }}
+
+      - name: Generate site (update-test.xml)
+        shell: pwsh
+        run: |
+          $ver   = "${{ steps.ver.outputs.VERSION }}"
+          $user  = "${{ github.repository_owner }}"
+          $repo  = "${{ github.event.repository.name }}"
+          $file  = "${{ steps.sha.outputs.FILE }}"
+          $name  = Split-Path -Leaf $file
+          $sha   = "${{ steps.sha.outputs.SHA256 }}"
+
+          New-Item -ItemType Directory -Force -Path site-test | Out-Null
+
+          $xml = @"
+          <?xml version="1.0" encoding="UTF-8"?>
+          <item>
+          <version>$ver</version>
+          <url>https://github.com/$user/$repo/releases/download/test-$ver/$name</url>
+          <changelog>https://$user.github.io/$repo/changelog-$ver-test.html</changelog>
+          <mandatory>false</mandatory>
+          <checksum algorithm="SHA256">$sha</checksum>
+          </item>
+          "@
+
+          $xml | Out-File -Encoding UTF8 site-test/update-test.xml
+          "GymAdmin $ver (test) - cambios" | Out-File -Encoding UTF8 site-test/changelog-$ver-test.html -Force
+
+      - name: Upload Pages artifact (test)
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site-test
+
+  deploy-test:
+    runs-on: ubuntu-latest
+    needs: build-test
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

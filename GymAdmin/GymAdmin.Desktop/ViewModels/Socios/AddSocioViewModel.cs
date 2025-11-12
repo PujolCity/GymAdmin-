@@ -35,10 +35,16 @@ public sealed partial class AddSocioViewModel : ObservableObject, IDataErrorInfo
     [NotifyCanExecuteChangedFor(nameof(GuardarCommand))]
     private string apellido = string.Empty;
 
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(GuardarCommand))]
+    [NotifyPropertyChangedFor(nameof(FormularioValido))]
+    private string telefono = string.Empty;
+
     // Marcamos interacción al escribir
     partial void OnDniChanged(string value) => MarkAsInteracted();
     partial void OnNombreChanged(string value) => MarkAsInteracted();
     partial void OnApellidoChanged(string value) => MarkAsInteracted();
+    partial void OnTelefonoChanged(string value) => MarkAsInteracted();
 
     public bool FormularioValido => string.IsNullOrEmpty(Error);
 
@@ -56,10 +62,10 @@ public sealed partial class AddSocioViewModel : ObservableObject, IDataErrorInfo
         {
             HasUserInteracted = true;
 
-            // Forzamos re-evaluación de IDataErrorInfo
             OnPropertyChanged(nameof(Dni));
             OnPropertyChanged(nameof(Nombre));
             OnPropertyChanged(nameof(Apellido));
+            OnPropertyChanged(nameof(Telefono));
             OnPropertyChanged(nameof(FormularioValido));
         }
     }
@@ -77,6 +83,9 @@ public sealed partial class AddSocioViewModel : ObservableObject, IDataErrorInfo
             var e3 = this[nameof(Apellido)];
             if (!string.IsNullOrEmpty(e3)) return e3;
 
+            var e4 = this[nameof(Telefono)];
+            if (!string.IsNullOrEmpty(e4)) return e4;
+
             return string.Empty;
         }
     }
@@ -92,6 +101,7 @@ public sealed partial class AddSocioViewModel : ObservableObject, IDataErrorInfo
                 nameof(Dni) => ValidarDni(Dni),
                 nameof(Nombre) => ValidarNombre(Nombre),
                 nameof(Apellido) => ValidarApellido(Apellido),
+                nameof(Telefono) => ValidarTelefono(Telefono),
                 _ => string.Empty
             };
         }
@@ -120,6 +130,15 @@ public sealed partial class AddSocioViewModel : ObservableObject, IDataErrorInfo
         return errores.Count > 0 ? errores[0] : string.Empty;
     }
 
+    private string ValidarTelefono(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return string.Empty; 
+        if (!_validationUIService.EsTelefonoValido(value))
+            return "Teléfono debe tener entre 7 y 15 dígitos";
+        return string.Empty;
+    }
+
     [RelayCommand(CanExecute = nameof(CanGuardar))]
     private async Task GuardarAsync()
     {
@@ -142,7 +161,8 @@ public sealed partial class AddSocioViewModel : ObservableObject, IDataErrorInfo
             {
                 Dni = Dni?.Trim(),
                 Nombre = Nombre?.Trim(),
-                Apellido = Apellido?.Trim()
+                Apellido = Apellido?.Trim(),
+                Telefono = Telefono?.Trim()
             };
 
             var result = await _socioCreateInteractor.ExecuteAsync(dto);

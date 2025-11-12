@@ -32,7 +32,8 @@ public class UpdateSocioInteractor : IUpdateSocioInteractor
             Id = socioDto.Id,
             Nombre = socioDto.Nombre,
             Apellido = socioDto.Apellido,
-            Dni = socioDto.Dni
+            Dni = socioDto.Dni,
+            IsActive = socioDto.IsActive,
         };
 
         return await _socioService.UpdateAsync(socio, cancellation);

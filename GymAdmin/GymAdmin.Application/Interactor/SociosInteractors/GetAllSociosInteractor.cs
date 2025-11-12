@@ -38,11 +38,14 @@ public class GetAllSociosInteractor : IGetAllSociosInteractor
             Dni = s.Dni,
             Nombre = s.Nombre,
             Apellido = s.Apellido,
+            Telefono = !String.IsNullOrEmpty(s.TelefonoDecrypted) ? s.TelefonoDecrypted : "-",
             ExpiracionMembresia = s.ExpiracionMembresia,
-            Estado = s.IsMembresiaExpirada ? "Inactivo" : "Activo",
-            UltimaAsistencia = s.UltimaAsistencia.HasValue 
+            Estado = s.IsActive? "Activo" : "Inactivo",  
+            UltimaAsistencia = s.UltimaAsistencia.HasValue
             ? DateTime.SpecifyKind(s.UltimaAsistencia.Value, DateTimeKind.Utc)
             .ToLocalTime() : null,
+            FechaRegistro = DateTime.SpecifyKind(s.FechaRegistro, DateTimeKind.Utc)
+            .ToLocalTime().ToString("dd/MM/yyyy HH:mm"),
             VigenciaTexto = s.VigenciaTexto,
             CreditosRestantes = s.CreditosRestantes,
             TotalCreditosComprados = s.TotalCreditosComprados,
