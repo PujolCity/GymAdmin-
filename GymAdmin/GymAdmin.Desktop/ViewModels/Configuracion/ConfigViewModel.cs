@@ -43,6 +43,7 @@ public partial class ConfigViewModel : ViewModelBase
         {
             Description = "Seleccioná la carpeta base para exportaciones/plantillas"
         };
+
         if (dlg.ShowDialog() == DialogResult.OK && !string.IsNullOrWhiteSpace(dlg.SelectedPath))
             DefaultFolder = dlg.SelectedPath;
     }
