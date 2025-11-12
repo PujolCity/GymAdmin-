@@ -1,4 +1,5 @@
 ﻿using GymAdmin.Applications.Interactor.AsistenciaInteractors;
+using GymAdmin.Applications.Interactor.ConfiguracionInteractors;
 using GymAdmin.Applications.Interactor.PagosInteractors;
 using GymAdmin.Applications.Interactor.PlanesMembresia;
 using GymAdmin.Applications.Interactor.SociosInteractors;
@@ -60,6 +61,8 @@ public static class ConfigurationServiceCollectionExtensions
         services.AddTransient<IGetAsistenciasBySocioInteractor, GetAsistenciasBySocioInteractor>();
         services.AddTransient<IUpdateAsistenciaInteractor, UpdateAsistenciaInteractor>();
         services.AddTransient<IDeleteAsistenciaInteractor, DeleteAsistenciaInteractor>();
+
+        services.AddTransient<IGetConfigurationInteractor, GetConfigurationInteractor>();
 
         return services;
     }

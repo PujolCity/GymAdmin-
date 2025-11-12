@@ -7,6 +7,35 @@
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <TabControl>
+
+        <!-- Métodos de pago -->
+        <TabItem Header="Métodos de pago">
+            <Grid Margin="16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="2*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Lista -->
+                <DataGrid ItemsSource="{Binding PaymentMethods}"
+                          SelectedItem="{Binding SelectedPaymentMethod}"
+                          AutoGenerateColumns="False">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Nombre" Binding="{Binding Name}" Width="*"/>
+                        <DataGridCheckBoxColumn Header="Habilitado" Binding="{Binding IsEnabled}" Width="100"/>
+                        <DataGridTextColumn Header="Ajuste" Binding="{Binding AdjustmentDisplay}" Width="150"/>
+                        <DataGridTextColumn Header="Orden" Binding="{Binding SortOrder}" Width="80"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+
+                <!-- Editor -->
+                <StackPanel Grid.Column="1" Margin="12" DataContext="{Binding SelectedPaymentMethod}">
+                    <!-- Nombre, Habilitado, Ajuste (Combo: Ninguno/%), Valor, Notas, Orden -->
+                    <!-- Botones: Nuevo / Duplicar / Eliminar / Guardar cambios -->
+                </StackPanel>
+            </Grid>
+        </TabItem>
+        
         <!-- General -->
         <TabItem Header="General">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
@@ -44,34 +73,6 @@
                     </StackPanel>
                 </GroupBox>
             </ScrollViewer>
-        </TabItem>
-
-        <!-- Métodos de pago -->
-        <TabItem Header="Métodos de pago">
-            <Grid Margin="16">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="2*"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-
-                <!-- Lista -->
-                <DataGrid ItemsSource="{Binding PaymentMethods}"
-                SelectedItem="{Binding SelectedPaymentMethod}"
-                AutoGenerateColumns="False">
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Header="Nombre" Binding="{Binding Name}" Width="*"/>
-                        <DataGridCheckBoxColumn Header="Habilitado" Binding="{Binding IsEnabled}" Width="100"/>
-                        <DataGridTextColumn Header="Ajuste" Binding="{Binding AdjustmentDisplay}" Width="150"/>
-                        <DataGridTextColumn Header="Orden" Binding="{Binding SortOrder}" Width="80"/>
-                    </DataGrid.Columns>
-                </DataGrid>
-
-                <!-- Editor -->
-                <StackPanel Grid.Column="1" Margin="12" DataContext="{Binding SelectedPaymentMethod}">
-                    <!-- Nombre, Habilitado, Ajuste (Combo: Ninguno/%), Valor, Notas, Orden -->
-                    <!-- Botones: Nuevo / Duplicar / Eliminar / Guardar cambios -->
-                </StackPanel>
-            </Grid>
         </TabItem>
 
         <!-- Importar / Exportar -->
