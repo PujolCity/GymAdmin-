@@ -1,7 +1,6 @@
 ﻿using GymAdmin.Domain.Entities;
 using GymAdmin.Domain.Interfaces.Repositories;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Storage;
 
 namespace GymAdmin.Infrastructure.Data.Repositories;
 
@@ -10,12 +9,12 @@ public class UnitOfWork : IUnitOfWork
     private readonly GymAdminDbContext _context;
 
     public IRepository<Pagos> PagosRepo { get; }
-    public IRepository<PlanesMembresia> MembresiaRepo { get; } 
+    public IRepository<PlanesMembresia> MembresiaRepo { get; }
     public ISocioRepository SocioRepo { get; }
     public IRepository<User> UserRepo { get; }
     public IRepository<Asistencia> AsistenciaRepo { get; }
     public IRepository<SystemConfig> SystemConfigRepo { get; }
-   public IRepository<MetodoPago> MetodoPagoRepo { get; }
+    public IRepository<MetodoPago> MetodoPagoRepo { get; }
 
     public UnitOfWork(GymAdminDbContext context,
         IRepository<SystemConfig> systemConfigRepo,

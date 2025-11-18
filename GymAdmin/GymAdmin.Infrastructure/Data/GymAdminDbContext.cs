@@ -44,10 +44,23 @@ public class GymAdminDbContext : DbContext
             entity.Property(mp => mp.IsActive)
                   .HasDefaultValue(true);
 
+            entity.Property(mp => mp.TipoAjuste)
+                  .HasConversion<string>()   
+                  .HasMaxLength(20);
+
+            entity.Property(mp => mp.ValorAjuste)
+                  .HasColumnType("decimal(10,2)");  
+
+            entity.Property(mp => mp.Orden)
+                  .HasDefaultValue(0);
+
             entity.HasIndex(mp => mp.Nombre)
                   .IsUnique();
 
-            // (Opcional) seed inicial lo haremos en la migración para poder usar SQL de backfill
+            entity.HasMany(mp => mp.Pagos)
+                  .WithOne(p => p.MetodoPagoRef)
+                  .HasForeignKey(p => p.MetodoPagoId)
+                  .OnDelete(DeleteBehavior.Cascade);
         });
 
         // Configuración de Socio
