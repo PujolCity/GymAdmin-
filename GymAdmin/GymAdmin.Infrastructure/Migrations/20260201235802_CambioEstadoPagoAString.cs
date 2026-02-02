@@ -19,6 +19,21 @@ namespace GymAdmin.Infrastructure.Migrations
                 oldClrType: typeof(int),
                 oldType: "INTEGER",
                 oldDefaultValue: 1);
+
+            migrationBuilder.Sql("""
+            WITH ordered AS (
+                SELECT Id,
+                       ROW_NUMBER() OVER (
+                           ORDER BY 
+                               CASE WHEN IFNULL(Nombre,'') = '' THEN 1 ELSE 0 END,
+                               Nombre
+                       ) AS rn
+                FROM MetodosPago
+            )
+            UPDATE MetodosPago
+            SET Orden = (SELECT rn FROM ordered WHERE ordered.Id = MetodosPago.Id)
+            WHERE IFNULL(Orden, 0) = 0;
+        """);
         }
 
         /// <inheritdoc />
@@ -33,6 +48,11 @@ namespace GymAdmin.Infrastructure.Migrations
                 oldClrType: typeof(string),
                 oldType: "TEXT",
                 oldDefaultValue: "Pagado");
+
+            migrationBuilder.Sql("""
+                    UPDATE MetodosPago
+                    SET Orden = 0;
+                """);
         }
     }
 }
