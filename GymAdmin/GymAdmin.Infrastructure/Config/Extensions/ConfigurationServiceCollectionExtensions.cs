@@ -1,12 +1,11 @@
 ﻿using GymAdmin.Applications.Interactor.AsistenciaInteractors;
-using GymAdmin.Applications.Interactor.ConfiguracionInteractors;
+using GymAdmin.Applications.Interactor.ConfiguracionInteractors.MetodoPago;
 using GymAdmin.Applications.Interactor.PagosInteractors;
 using GymAdmin.Applications.Interactor.PlanesMembresia;
 using GymAdmin.Applications.Interactor.SociosInteractors;
 using GymAdmin.Domain.Interfaces.Repositories;
 using GymAdmin.Domain.Interfaces.Services;
 using GymAdmin.Infrastructure.Config.FolderConfig;
-using GymAdmin.Infrastructure.Config.InitializationExtensions;
 using GymAdmin.Infrastructure.Config.Options;
 using GymAdmin.Infrastructure.Data;
 using GymAdmin.Infrastructure.Data.Repositories;
@@ -16,7 +15,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Serilog;
-using Serilog.Events;
 
 namespace GymAdmin.Infrastructure.Config.Extensions;
 
@@ -52,7 +50,6 @@ public static class ConfigurationServiceCollectionExtensions
         services.AddTransient<IDeletePlanMembresiaInteractor, DeletePlanMembresiaInteractor>();
 
         services.AddTransient<IGetPagosInteractor, GetPagosInteractor>();
-        services.AddTransient<IGetMetodosPagoInteractor, GetMetodosPagoInteractor>();
         services.AddTransient<IGetSociosLookupInteractor, GetSociosLookupInteractor>();
         services.AddTransient<ICreatePagoInteractor, CreatePagoInteractor>();
         services.AddTransient<IAnularPagoInteractor, AnularPagoInteractor>();
@@ -62,7 +59,12 @@ public static class ConfigurationServiceCollectionExtensions
         services.AddTransient<IUpdateAsistenciaInteractor, UpdateAsistenciaInteractor>();
         services.AddTransient<IDeleteAsistenciaInteractor, DeleteAsistenciaInteractor>();
 
-        services.AddTransient<IGetConfigurationInteractor, GetConfigurationInteractor>();
+        services.AddTransient<IGetMetodosPagoInteractor, GetMetodoPagoInteractor>();
+        services.AddTransient<ICreateMetodoPagoInteractor, CreateMetodoPagoInteractor>();
+        services.AddTransient<IUpdateMetodoPagoInteractor, UpdateMetodoPagoInteractor>();
+        services.AddTransient<IDeleteMetodoPagoInteractor, DeleteMetodoPagoInteractor>();
+        services.AddTransient<IMoveDownInteractor, MoveDownInteractor>();
+        services.AddTransient<IMoveUpInteractor, MoveUpInteractor>();
 
         return services;
     }
@@ -73,6 +75,8 @@ public static class ConfigurationServiceCollectionExtensions
         services.AddTransient<IPlanMembresiaService, PlanMembresiaService>();
         services.AddTransient<IPagosServices, PagosServices>();
         services.AddTransient<IAsistenciaService, AsistenciaService>();
+        services.AddTransient<IMetodoPagoService, MetodoPagoService>();
+
         return services;
     }
 
@@ -82,6 +86,7 @@ public static class ConfigurationServiceCollectionExtensions
         services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
         services.AddScoped<ISocioRepository, SocioRepository>();
         services.AddScoped<ITransaction, EfCoreTransaction>();
+        services.AddScoped<IMetodoPagoRepository, MetodoPagoRepository>();
 
         return services;
     }

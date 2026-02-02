@@ -12,7 +12,7 @@ public class AnularPagoInteractor : IAnularPagoInteractor
 {
     private readonly IPagosServices _pagoService;
     private readonly IValidator<BaseDeleteRequest> _validator;
-    
+
     public AnularPagoInteractor(IPagosServices pagoService,
         IValidator<BaseDeleteRequest> validator)
     {

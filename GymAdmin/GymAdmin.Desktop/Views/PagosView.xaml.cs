@@ -59,7 +59,7 @@ public partial class PagosView : UserControl
             vm.PropertyChanged -= OnViewModelPropertyChanged;
     }
 
-    private void OnViewModelPropertyChanged(object sender, PropertyChangedEventArgs e)
+    private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(PagosViewModel.IsDialogOpen))
         {
@@ -74,5 +74,4 @@ public partial class PagosView : UserControl
             vm.IsDialogOpen = false;
         }
     }
-
 }

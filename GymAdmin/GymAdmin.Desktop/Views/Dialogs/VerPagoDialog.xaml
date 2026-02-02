@@ -45,8 +45,10 @@
                     <TextBlock Text="Nº de pago" Style="{StaticResource LabelMuted}"/>
                     <TextBlock Text="Socio" Style="{StaticResource LabelMuted}"/>
                     <TextBlock Text="Plan" Style="{StaticResource LabelMuted}"/>
-                    <TextBlock Text="Método" Style="{StaticResource LabelMuted}"/>
-                    <TextBlock Text="Monto" Style="{StaticResource LabelMuted}"/>
+                    <TextBlock Text="Método de Pago" Style="{StaticResource LabelMuted}"/>
+                    <TextBlock Text="Precio Base" Style="{StaticResource LabelMuted}"/>
+                    <TextBlock Text="Descuentos / Recargos" Style="{StaticResource LabelMuted}"/>
+                    <TextBlock Text="Monto Final" Style="{StaticResource LabelMuted}"/>
                     <TextBlock Text="Fecha de pago" Style="{StaticResource LabelMuted}"/>
                     <TextBlock Text="Créditos asignados" Style="{StaticResource LabelMuted}"/>
                     <TextBlock Text="Vencimiento" Style="{StaticResource LabelMuted}"/>
@@ -69,10 +71,9 @@
 
                     <TextBlock Text="{Binding MetodoPago}"/>
 
-                    <TextBlock>
-                        <Run Text="{Binding Precio, StringFormat={}{0:C}}"/>
-                        <Run Text=" ARS" Foreground="{StaticResource TextSecondaryBrush}"/>
-                    </TextBlock>
+                    <TextBlock Text="{Binding Precio, StringFormat={}{0:C}}"/>
+                    <TextBlock Text="{Binding DescuentosRecargos}"/>
+                    <TextBlock Text="{Binding MontoFinal, StringFormat={}{0:C}}"/>
 
                     <TextBlock Text="{Binding FechaPagoLocal, StringFormat={}{0:dd/MM/yyyy HH:mm}}"/>
 

@@ -1,7 +1,8 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using GymAdmin.Applications.DTOs.MetodosDePagoDto;
+using GymAdmin.Applications.DTOs.MetodosPagoDto;
 using GymAdmin.Applications.DTOs.PagosDto;
+using GymAdmin.Applications.Interactor.ConfiguracionInteractors.MetodoPago;
 using GymAdmin.Applications.Interactor.PagosInteractors;
 using GymAdmin.Desktop.ViewModels.Dialogs;
 using GymAdmin.Desktop.Views.Dialogs;
@@ -16,6 +17,7 @@ public partial class PagosViewModel : ViewModelBase, IDisposable
 {
     private const string COLOR_ROJO = "DangerButtonStyle";
     private const string COLOR_PRIMARIO = "PrimaryButtonStyle";
+    private const string ESTADO_ANULADO = "Anulado";
 
     private readonly IGetPagosInteractor _getPagosInteractor;
     private readonly IAnularPagoInteractor _anularPagoInteractor;
@@ -186,9 +188,15 @@ public partial class PagosViewModel : ViewModelBase, IDisposable
 
     private async Task LoadMethodsAsync()
     {
-        var metodos = await _getMetodosPago.ExecuteAsync(CancellationToken.None);
+        var req = new GetMetodoPagoRequest
+        {
+            PageNumber = 1,
+            PageSize = 1000
+        };
+        var result = await _getMetodosPago.ExecuteAsync(req, CancellationToken.None);
+
         MetodosPago.Clear();
-        foreach (var m in metodos) MetodosPago.Add(m);
+        foreach (var metodo in result.Items) MetodosPago.Add(metodo);
     }
 
     private bool CanSimpleAction() => !IsBusy;
@@ -228,6 +236,13 @@ public partial class PagosViewModel : ViewModelBase, IDisposable
     {
         var target = pago ?? PagoSeleccionado;
         if (target is null) return;
+
+        if (target.Estado == ESTADO_ANULADO)
+        {
+            ErrorMessage = "El pago ya se encuentra anulado.";
+            await ConfirmAsync("No se pudo anular", ErrorMessage, "Aceptar", string.Empty, COLOR_PRIMARIO, COLOR_ROJO, false);
+            return;
+        }
 
         var ok = await ConfirmAsync("Anular pago",
             $"¿Querés anular el pago de {target.SocioNombre} de {target.Precio:C}?\n" +

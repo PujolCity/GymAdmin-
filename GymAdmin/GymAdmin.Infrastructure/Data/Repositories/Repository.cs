@@ -71,6 +71,13 @@ public class Repository<T> : IRepository<T> where T : EntityBase
     public void Remove(T entity)
         => _dbSet.Remove(entity);
 
+    public async Task RemoveAsync(T entity, CancellationToken ct = default)
+    {
+        var toRemove = await _dbSet.FindAsync(entity.Id, ct);
+        if (toRemove != null)
+            Remove(toRemove);
+    }
+
     // --- Métodos para Query Composition ---
     public IQueryable<T> Query()
         => _dbSet.Where(e => !e.IsDeleted);

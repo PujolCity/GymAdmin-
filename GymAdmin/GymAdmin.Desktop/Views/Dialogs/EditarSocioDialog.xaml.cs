@@ -39,12 +39,23 @@ public partial class EditarSocioDialog : UserControl
 
     private void TextBox_PreviewTextInput(object sender, TextCompositionEventArgs e)
     {
+        PreviewDigitInput(sender, e, 8);
+    }
+
+    private void TelefonoBox_PreviewTextInput(object sender, TextCompositionEventArgs e)
+    {
+        PreviewDigitInput(sender, e, 15);
+    }
+
+
+    private void PreviewDigitInput(object sender, TextCompositionEventArgs e, int largoMaximo)
+    {
         e.Handled = !e.Text.All(char.IsDigit);
 
         if (!e.Handled && sender is TextBox tb)
         {
             var newText = GetTextAfterInput(tb, e.Text);
-            if (newText.Length > 8) e.Handled = true;
+            if (newText.Length > largoMaximo) e.Handled = true;
         }
     }
 

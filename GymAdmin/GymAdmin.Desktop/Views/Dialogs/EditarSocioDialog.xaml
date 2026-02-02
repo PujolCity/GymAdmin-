@@ -83,7 +83,8 @@
                             <TextBox Text="{Binding Telefono, 
                                 UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
                                      Width="220"
-                                     PreviewTextInput="NombreTextBox_PreviewTextInput"
+                                     MaxLength="12"                             
+                                     PreviewTextInput="TelefonoBox_PreviewTextInput"
                                      DataObject.Pasting="TextBox_Pasting"
                                      VerticalAlignment="Center"/>
 

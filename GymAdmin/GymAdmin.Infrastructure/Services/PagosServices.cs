@@ -25,17 +25,6 @@ public class PagosServices : IPagosServices
         _cryptoService = cryptoService;
     }
 
-    public async Task<Result<List<MetodoPago>>> GetMetodosPagoAsync(bool isActive = true, CancellationToken ct = default)
-    {
-        var query = _unitOfWork.MetodoPagoRepo.Query();
-
-        if (isActive)
-            query = query.Where(m => m.IsActive);
-
-        var result = await query.ToListAsync();
-        return Result<List<MetodoPago>>.Ok(result);
-    }
-
     public async Task<PagedResult<Pagos>> GetAllAsync(PagosFilter filter, Paging paging, Sorting? sorting = null, CancellationToken ct = default)
     {
         IQueryable<Pagos> q = _unitOfWork.PagosRepo.Query()
@@ -137,7 +126,7 @@ public class PagosServices : IPagosServices
 
     public async Task<Result> AnularPagoAsync(Pagos pagoAnulacion, CancellationToken ct = default)
     {
-        // ⚠️ Sólo usamos el Id (evitamos “update por objeto venido de UI”)
+        // Sólo usamos el Id (evitamos “update por objeto venido de UI”)
         var pagoId = pagoAnulacion.Id;
 
         await using var tx = await _unitOfWork.BeginTransactionAsync(ct);
@@ -160,8 +149,8 @@ public class PagosServices : IPagosServices
             if (pago.Estado == EstadoPago.Anulado)
             {
                 _logger.LogDebug("Pago ya estaba anulado. PagoId={PagoId}", pagoId);
-                await tx.CommitAsync(ct); 
-                return Result.Ok();
+                await tx.RollbackAsync(ct);
+                return Result.Fail($"El pago ya se encuentra Anulado");
             }
 
             var socio = pago.Socio ?? throw new InvalidOperationException("Pago sin socio asociado.");
