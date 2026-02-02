@@ -2,5 +2,6 @@
 
 public interface ICalculadorTipoAjuste
 {
-    decimal Aplicar(decimal montoBase, decimal valor);
+    decimal Calcular(decimal montoBase, decimal valor);
+    decimal CalcularDelta(decimal baseAmount, decimal valorAjuste);
 }

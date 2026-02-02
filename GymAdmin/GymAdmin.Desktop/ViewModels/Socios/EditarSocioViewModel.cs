@@ -1,6 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using GymAdmin.Applications.DTOs;
 using GymAdmin.Applications.DTOs.Asistencia;
 using GymAdmin.Applications.DTOs.SociosDto;
 using GymAdmin.Applications.Interactor.AsistenciaInteractors;
@@ -120,8 +119,7 @@ public partial class EditarSocioViewModel : ViewModelBase
         IGetAsistenciasBySocioInteractor getAsistencias,
         ICreateAsistenciaInteractor createAsistencia,
         IGetSocioByIdInteractor getSocioById,
-        IDeleteAsistenciaInteractor deleteAsistencia
-,
+        IDeleteAsistenciaInteractor deleteAsistencia,
         IUpdateAsistenciaInteractor updateAsistencia)
     {
         _getSocioById = getSocioById;
@@ -502,7 +500,9 @@ public partial class EditarSocioViewModel : ViewModelBase
         return res;
     }
 
-    private async Task<bool> ShowConfirmAsync(string title, string message, string accept = "Eliminar", string cancel = "Cancelar", string acceptColor = COLOR_ROJO, string cancelColor = COLOR_PRIMARIO, bool showCancel = true)
+    private async Task<bool> ShowConfirmAsync(string title, string message, string accept = "Eliminar", 
+        string cancel = "Cancelar", string acceptColor = COLOR_ROJO, 
+        string cancelColor = COLOR_PRIMARIO, bool showCancel = true)
     {
         var vm = new ConfirmDialogViewModel
         {

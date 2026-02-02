@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 namespace GymAdmin.Infrastructure.Data;
 
 // COMANDO PARA MIGRACIONES EN CONSOLA DE GESTIÓN DE PAQUETES:
-// Add-Migration NewMigration -Project GymAdmin.Infrastructure -StartupProject GymAdmin.Desktop
+// Add-Migration AddPropertiesToMetodosPago -Project GymAdmin.Infrastructure -StartupProject GymAdmin.Desktop
 
 public class GymAdminDbContext : DbContext
 {
@@ -45,11 +45,11 @@ public class GymAdminDbContext : DbContext
                   .HasDefaultValue(true);
 
             entity.Property(mp => mp.TipoAjuste)
-                  .HasConversion<string>()   
+                  .HasConversion<string>()
                   .HasMaxLength(20);
 
             entity.Property(mp => mp.ValorAjuste)
-                  .HasColumnType("decimal(10,2)");  
+                  .HasColumnType("decimal(10,2)");
 
             entity.Property(mp => mp.Orden)
                   .HasDefaultValue(0);
@@ -77,7 +77,7 @@ public class GymAdminDbContext : DbContext
                 .IsRequired()
                 .HasMaxLength(50);
 
-            entity.Property(m => m.Telefono)
+            entity.Property(m => m.TelefonoEncrypted)
                 .HasMaxLength(20);
 
             entity.Property(e => e.DniEncrypted).IsRequired();
@@ -92,16 +92,13 @@ public class GymAdminDbContext : DbContext
                 .HasDefaultValue(0);
 
             entity.Property(m => m.ExpiracionMembresia);
-            
+
             entity.Property(m => m.IsActive)
                 .HasDefaultValue(false);
 
             // Índices únicos
             entity.HasIndex(m => m.DniEncrypted)
                 .IsUnique();
-
-            entity.HasIndex(m => m.Telefono)
-            .IsUnique();
 
             // Relaciones
             entity.HasMany(m => m.Pagos)
@@ -156,7 +153,7 @@ public class GymAdminDbContext : DbContext
                 .IsRequired();
 
             entity.Property(p => p.Estado)
-                  .HasConversion<int>()
+                  .HasConversion<string>()
                   .HasDefaultValue(EstadoPago.Pagado)
                   .IsRequired();
 
@@ -167,6 +164,28 @@ public class GymAdminDbContext : DbContext
                 .IsRequired();
 
             entity.Property(p => p.FechaVencimiento)
+                .IsRequired();
+
+            // NUEVO: snapshot ajuste aplicado
+            entity.Property(mp => mp.TipoAjusteAplicado)
+                .HasConversion<string>()
+                .HasDefaultValue(TipoAjusteSaldo.Ninguno)
+                .HasMaxLength(20)
+                .IsRequired();
+
+            entity.Property(p => p.ValorAjusteAplicado)
+                .HasPrecision(10, 2)
+                .HasDefaultValue(0m)
+                .IsRequired();
+
+            // NUEVO: resultado del cálculo
+            entity.Property(p => p.AjusteImporte)
+                .HasPrecision(10, 2)
+                .HasDefaultValue(0m)
+                .IsRequired();
+
+            entity.Property(p => p.MontoFinal)
+                .HasPrecision(10, 2)
                 .IsRequired();
 
             // Relaciones
@@ -188,6 +207,7 @@ public class GymAdminDbContext : DbContext
             entity.HasIndex(p => p.FechaPago);
             entity.HasIndex(p => p.Estado);
             entity.HasIndex(p => new { p.FechaPago, p.Estado });
+            entity.HasIndex(p => p.MontoFinal);
         });
 
         // Configuración de Asistencia

@@ -1,6 +1,6 @@
 ﻿namespace GymAdmin.Domain.Enums;
 
-public enum TipoAjuste
+public enum TipoAjusteSaldo
 {
     Ninguno = 0,
     Porcentaje = 1,

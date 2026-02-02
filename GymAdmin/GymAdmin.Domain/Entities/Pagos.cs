@@ -19,5 +19,13 @@ public class Pagos : EntityBase
     public Socio Socio { get; set; }
     public PlanesMembresia PlanMembresia { get; set; }
 
+    // Snapshot del ajuste aplicado
+    public TipoAjusteSaldo TipoAjusteAplicado { get; set; } = TipoAjusteSaldo.Ninguno;
+    public decimal ValorAjusteAplicado { get; set; } = 0m;
+
+    // Resultado del cálculo
+    public decimal AjusteImporte { get; set; } = 0m;  // + o - según tu regla
+    public decimal MontoFinal { get; set; }           // MontoBase + AjusteImporte
+
     bool IsAnulado => Estado == EstadoPago.Anulado;
 }

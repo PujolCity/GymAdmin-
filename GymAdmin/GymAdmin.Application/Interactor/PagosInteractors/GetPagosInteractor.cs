@@ -7,7 +7,7 @@ namespace GymAdmin.Applications.Interactor.PagosInteractors;
 
 public class GetPagosInteractor : IGetPagosInteractor
 {
-    private  readonly IPagosServices _pagosServices;
+    private readonly IPagosServices _pagosServices;
 
     public GetPagosInteractor(IPagosServices pagosServices)
     {
@@ -38,10 +38,17 @@ public class GetPagosInteractor : IGetPagosInteractor
             PlanMembresiaId = p.PlanMembresiaId,
             PlanNombre = p.PlanMembresia.Nombre,
             MetodoPagoId = p.MetodoPagoId,
-            MetodoPago= p.MetodoPagoRef.Nombre,
+            MetodoPago = p.MetodoPagoRef.Nombre,
             Precio = p.Precio,
             FechaPago = p.FechaPago,
-            Estado = p.Estado.ToString()
+            Estado = p.Estado.ToString(),
+            CreditosAsignados = p.CreditosAsignados,
+            FechaVencimiento = p.FechaVencimiento,
+            Observaciones = p.Observaciones ?? string.Empty,
+            MontoFinal = p.MontoFinal,
+            AjusteImporte = p.AjusteImporte,
+            TipoAjusteAplicado = p.TipoAjusteAplicado,
+            ValorAjusteAplicado = p.ValorAjusteAplicado
         }).ToList();
 
         return new PagedResult<PagoDto>

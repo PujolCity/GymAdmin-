@@ -1,12 +1,15 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GymAdmin.Applications.DTOs.MembresiasDto;
-using GymAdmin.Applications.DTOs.MetodosDePagoDto;
+using GymAdmin.Applications.DTOs.MetodosPagoDto;
 using GymAdmin.Applications.DTOs.PagosDto;
+using GymAdmin.Applications.Interactor.ConfiguracionInteractors.MetodoPago;
 using GymAdmin.Applications.Interactor.PagosInteractors;
 using GymAdmin.Applications.Interactor.PlanesMembresia;
 using GymAdmin.Applications.Interfaces.ValidacionesUI;
 using GymAdmin.Domain.Enums;
+using GymAdmin.Domain.Factory.CalculadorAjusteFactory;
+using GymAdmin.Domain.Interfaces.Bussiness;
 using GymAdmin.Domain.Results;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -65,40 +68,85 @@ public sealed partial class AddPagoViewModel : ViewModelBase, IDataErrorInfo, ID
     [ObservableProperty] private bool hasPrecioInteracted;
     [ObservableProperty] private bool hasFechaPagoInteracted;
     [ObservableProperty] private bool hasVencimientoInteracted;
+    
+    [ObservableProperty] private bool precioEditadoManualmente;
+    partial void OnPrecioChanged(string value)
+    {
+        HasPrecioInteracted = true;
+
+        if (!_isSettingPrecioFromPlan)
+            PrecioEditadoManualmente = true;
+
+        RecalcularTotales();
+        GuardarCommand.NotifyCanExecuteChanged();
+    }
+
+    private bool _isSettingVencimientoAuto;
+    private bool _isSettingPrecioFromPlan;
+
+    private void SetPrecioFromPlan(decimal precio)
+    {
+        _isSettingPrecioFromPlan = true;
+        try
+        {
+            PrecioEditadoManualmente = false; // el plan manda
+            Precio = precio.ToString(CultureInfo.InvariantCulture);
+        }
+        finally
+        {
+            _isSettingPrecioFromPlan = false;
+        }
+    }
+
+    private void SetVencimientoAuto(DateTime fechaPagoBase, int diasValidez)
+    {
+        _isSettingVencimientoAuto = true;
+        try
+        {
+            HasVencimientoInteracted = false; // porque lo setea el sistema
+            FechaVencimiento = fechaPagoBase.Date.AddDays(diasValidez);
+        }
+        finally
+        {
+            _isSettingVencimientoAuto = false;
+        }
+    }
+
 
     [ObservableProperty] private PlanMembresiaDto? planSeleccionado;
     partial void OnPlanSeleccionadoChanged(PlanMembresiaDto? value)
     {
         HasPlanInteracted = true;
 
-        if (value is not null && !HasPrecioInteracted)
-            Precio = value.Precio.ToString(CultureInfo.InvariantCulture);
+        if (value is not null && !PrecioEditadoManualmente)
+            SetPrecioFromPlan(value.Precio);
 
         if (value is not null && value.DiasValidez > 0 && !HasVencimientoInteracted)
-            FechaVencimiento = (FechaPago ?? DateTime.Today).Date.AddDays(value.DiasValidez);
+            SetVencimientoAuto(FechaPago ?? DateTime.Today, value.DiasValidez);
 
         if (value is not null)
             CreditosAsignados = value.Creditos;
 
-        OnPropertyChanged(nameof(FormularioValido));
+        RecalcularTotales();
         GuardarCommand.NotifyCanExecuteChanged();
     }
 
     [ObservableProperty] private MetodoPagoDto? metodoSeleccionado;
     partial void OnMetodoSeleccionadoChanged(MetodoPagoDto? value)
     {
-        MetodoSeleccionado = value;
         HasMetodoInteracted = true;
-        OnPropertyChanged(nameof(FormularioValido));
+        RecalcularTotales();
         GuardarCommand.NotifyCanExecuteChanged();
     }
 
     [ObservableProperty] private string precio = string.Empty;
-    partial void OnPrecioChanged(string value)
+  
+    private void RecalcularTotales()
     {
-        HasPrecioInteracted = true;
         OnPropertyChanged(nameof(FormularioValido));
-        GuardarCommand.NotifyCanExecuteChanged();
+        OnPropertyChanged(nameof(MontoFinal));
+        OnPropertyChanged(nameof(MontoFinalDisplay));
+        OnPropertyChanged(nameof(Delta));
     }
 
     [ObservableProperty] private DateTime? fechaPago = DateTime.Now;
@@ -116,12 +164,59 @@ public sealed partial class AddPagoViewModel : ViewModelBase, IDataErrorInfo, ID
     [ObservableProperty] private DateTime? fechaVencimiento;
     partial void OnFechaVencimientoChanged(DateTime? value)
     {
-        HasVencimientoInteracted = true;
+        if (!_isSettingVencimientoAuto)
+            HasVencimientoInteracted = true;
+
         OnPropertyChanged(nameof(FormularioValido));
         GuardarCommand.NotifyCanExecuteChanged();
     }
 
     [ObservableProperty] private string observaciones = string.Empty;
+
+    public decimal? MontoFinal => CalcularMontoFinal();
+    public string MontoFinalDisplay =>
+        MontoFinal is null ? "—" : MontoFinal.Value.ToString("C", CultureInfo.CurrentCulture);
+    
+    public decimal? Delta => CalcularDelta();
+
+    private decimal? CalcularDelta()
+    {
+        if (!TryGetCalculoContext(out var basePrice, out var calculador, out var valorAjuste))
+            return null;
+
+        return calculador.CalcularDelta(basePrice, valorAjuste);
+    }
+
+    private decimal? CalcularMontoFinal()
+    {
+        if (!TryGetCalculoContext(out var basePrice, out var calculador, out var valorAjuste))
+            return null;
+
+        var montoFinal = calculador.Calcular(basePrice, valorAjuste);
+        return Math.Max(0m, montoFinal);
+    }
+
+    private bool TryGetCalculoContext(out decimal basePrice,
+    out ICalculadorTipoAjuste calculador, out decimal valorAjuste)
+    {
+        basePrice = 0;
+        calculador = default!;
+        valorAjuste = 0;
+
+        if (MetodoSeleccionado is null)
+            return false;
+
+        if (!decimal.TryParse(Precio, NumberStyles.Number, CultureInfo.InvariantCulture, out basePrice))
+            return false;
+
+        if (basePrice < 0)
+            return false;
+
+        calculador = CalculadorAjusteFactory.Crear(MetodoSeleccionado.TipoAjuste);
+        valorAjuste = MetodoSeleccionado.ValorAjuste;
+
+        return true;
+    }
 
     public AddPagoViewModel(
         IGetPlanesMembresiaInteractor getPlanes,
@@ -182,11 +277,18 @@ public sealed partial class AddPagoViewModel : ViewModelBase, IDataErrorInfo, ID
             Planes.Clear();
             foreach (var p in planes.Items)
                 Planes.Add(p);
+            
+            PlanSeleccionado = Planes.FirstOrDefault();
 
-            var metodos = await _getMetodosPago.ExecuteAsync(_cts.Token);
+            var request = new GetMetodoPagoRequest
+            {
+                PageNumber = 1,
+                PageSize = 500
+            };
+            var result = await _getMetodosPago.ExecuteAsync(request, _cts.Token);
+
             MetodosPago.Clear();
-            foreach (var m in metodos)
-                MetodosPago.Add(m);
+            foreach (var metodo in result.Items) MetodosPago.Add(metodo);
         }
         catch (OperationCanceledException) { }
         catch (Exception ex)
@@ -295,7 +397,11 @@ public sealed partial class AddPagoViewModel : ViewModelBase, IDataErrorInfo, ID
                 MetodoPagoId = MetodoSeleccionado!.Id,
                 Observaciones = string.IsNullOrWhiteSpace(Observaciones) ? null : Observaciones.Trim(),
                 CreditosAsignados = CreditosAsignados,
-                FechaVencimiento = FechaVencimiento!.Value
+                FechaVencimiento = FechaVencimiento!.Value.Date.AddHours(23).AddMinutes(59),
+                TipoAjusteAplicado = MetodoSeleccionado!.TipoAjuste,
+                ValorAjusteAplicado = MetodoSeleccionado!.ValorAjuste,
+                MontoFinal = MontoFinal!.Value,
+                AjusteImporte = Delta!.Value
             };
 
             Result result = await _createPago.ExecuteAsync(dto, _cts.Token);

@@ -14,7 +14,7 @@ public class UnitOfWork : IUnitOfWork
     public IRepository<User> UserRepo { get; }
     public IRepository<Asistencia> AsistenciaRepo { get; }
     public IRepository<SystemConfig> SystemConfigRepo { get; }
-    public IRepository<MetodoPago> MetodoPagoRepo { get; }
+    public IMetodoPagoRepository MetodoPagoRepo { get; }
 
     public UnitOfWork(GymAdminDbContext context,
         IRepository<SystemConfig> systemConfigRepo,
@@ -23,7 +23,7 @@ public class UnitOfWork : IUnitOfWork
         ISocioRepository socioRepo,
         IRepository<PlanesMembresia> membresiaRepo,
         IRepository<Pagos> pagosRepo,
-        IRepository<MetodoPago> metodoPagoRepo)
+        IMetodoPagoRepository metodoPagoRepo)
     {
         _context = context;
         SystemConfigRepo = systemConfigRepo;

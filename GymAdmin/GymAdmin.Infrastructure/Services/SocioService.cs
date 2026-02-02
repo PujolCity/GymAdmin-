@@ -28,7 +28,7 @@ public class SocioService : ISocioService
     {
 
         var socioExistente = await _unitOfWork.SocioRepo.GetSocioByDni(socio.Dni);
-        if (socioExistente != null)
+        if (socioExistente != null && !socioExistente.IsDeleted)
             return Result.Fail("Ya existe un socio con el mismo DNI.");
 
         try

@@ -57,7 +57,7 @@
                    Style="{StaticResource ValidatedTextBoxStyle}"/>
 
                     <!-- Telefono -->
-                    <TextBlock Text="Telefono*" Margin="0 15 0 0"/>
+                    <TextBlock Text="Telefono" Margin="0 15 0 0"/>
                     <TextBox x:Name="TelefonoTextBox"
                    Text="{Binding Telefono, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"
                    PreviewTextInput="TelefonoTextBox_PreviewTextInput"

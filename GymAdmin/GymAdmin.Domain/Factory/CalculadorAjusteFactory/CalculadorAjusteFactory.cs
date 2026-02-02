@@ -5,10 +5,10 @@ namespace GymAdmin.Domain.Factory.CalculadorAjusteFactory;
 
 public static class CalculadorAjusteFactory
 {
-    public static ICalculadorTipoAjuste Crear(TipoAjuste tipo) => tipo switch
+    public static ICalculadorTipoAjuste Crear(TipoAjusteSaldo tipo) => tipo switch
     {
-        TipoAjuste.Porcentaje => new AjustePorcentaje(),
-        TipoAjuste.MontoFijo => new AjusteMontoFijo(),
+        TipoAjusteSaldo.Porcentaje => new AjustePorcentaje(),
+        TipoAjusteSaldo.MontoFijo => new AjusteMontoFijo(),
         _ => new SinAjuste()
     };
 }

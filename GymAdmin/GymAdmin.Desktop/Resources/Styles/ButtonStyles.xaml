@@ -55,6 +55,13 @@
         <Setter Property="Padding" Value="16 8"/>
     </Style>
 
+    <Style x:Key="PrimarySmallButtonStyle" BasedOn="{StaticResource BaseButtonStyle}" TargetType="Button">
+        <Setter Property="Background" Value="{StaticResource PrimaryBrush}"/>
+        <Setter Property="Foreground" Value="{StaticResource TextInvertedBrush}"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="Padding" Value="8 4"/>
+    </Style>
+
     <!-- Botón secundario - Acciones alternativas -->
     <Style x:Key="SecondaryButtonStyle" BasedOn="{StaticResource BaseButtonStyle}" TargetType="Button">
         <Setter Property="Background" Value="{StaticResource SecondaryBrush}"/>

@@ -4,6 +4,8 @@ namespace GymAdmin.Domain.Factory.CalculadorAjusteFactory;
 
 public class SinAjuste : ICalculadorTipoAjuste
 {
-    public decimal Aplicar(decimal montoBase, decimal valor) => montoBase;
+    public decimal Calcular(decimal montoBase, decimal valor) => montoBase;
 
+    public decimal CalcularDelta(decimal baseAmount, decimal valorAjuste) 
+        => 0m;
 }

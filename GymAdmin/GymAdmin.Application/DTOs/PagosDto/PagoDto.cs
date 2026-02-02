@@ -1,4 +1,6 @@
-﻿namespace GymAdmin.Applications.DTOs.PagosDto;
+﻿using GymAdmin.Domain.Enums;
+
+namespace GymAdmin.Applications.DTOs.PagosDto;
 
 public class PagoDto
 {
@@ -15,4 +17,8 @@ public class PagoDto
     public string Estado { get; set; }
     public int CreditosAsignados { get; set; }
     public DateTime FechaVencimiento { get; set; }
+    public TipoAjusteSaldo TipoAjusteAplicado { get; set; } = TipoAjusteSaldo.Ninguno;
+    public decimal ValorAjusteAplicado { get; set; } = 0.0m;
+    public decimal AjusteImporte { get; set; } = 0m;
+    public decimal MontoFinal { get; set; }
 }
