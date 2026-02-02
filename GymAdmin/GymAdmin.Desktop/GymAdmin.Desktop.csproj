@@ -11,6 +11,13 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <Compile Remove="DataDb\**" />
+	  <EmbeddedResource Remove="DataDb\**" />
+	  <None Remove="DataDb\**" />
+	  <Page Remove="DataDb\**" />
+	</ItemGroup>
+
+	<ItemGroup>
 	  <None Remove="Resources\Images\Logo.png" />
 	</ItemGroup>
 
@@ -52,7 +59,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Folder Include="DataDb\" />
 	  <Folder Include="Properties\" />
 	</ItemGroup>
 

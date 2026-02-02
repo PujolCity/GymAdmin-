@@ -1,4 +1,6 @@
-﻿namespace GymAdmin.Applications.DTOs;
+﻿using GymAdmin.Domain.Enums;
+
+namespace GymAdmin.Applications.DTOs;
 
 public class BaseDeleteRequest
 {

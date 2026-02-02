@@ -86,8 +86,21 @@ namespace GymAdmin.Infrastructure.Migrations
                         .HasMaxLength(60)
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("Orden")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(0);
+
+                    b.Property<string>("TipoAjuste")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("TEXT");
+
+                    b.Property<decimal>("ValorAjuste")
+                        .HasColumnType("decimal(10,2)");
 
                     b.HasKey("Id");
 
@@ -103,6 +116,12 @@ namespace GymAdmin.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<decimal>("AjusteImporte")
+                        .ValueGeneratedOnAdd()
+                        .HasPrecision(10, 2)
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue(0m);
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
@@ -112,10 +131,11 @@ namespace GymAdmin.Infrastructure.Migrations
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("Estado")
+                    b.Property<string>("Estado")
+                        .IsRequired()
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(1);
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("Pagado");
 
                     b.Property<DateTime>("FechaPago")
                         .HasColumnType("TEXT");
@@ -128,6 +148,10 @@ namespace GymAdmin.Infrastructure.Migrations
 
                     b.Property<int>("MetodoPagoId")
                         .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("MontoFinal")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Observaciones")
                         .HasMaxLength(500)
@@ -142,8 +166,21 @@ namespace GymAdmin.Infrastructure.Migrations
                     b.Property<int>("SocioId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("TipoAjusteAplicado")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("Ninguno");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("TEXT");
+
+                    b.Property<decimal>("ValorAjusteAplicado")
+                        .ValueGeneratedOnAdd()
+                        .HasPrecision(10, 2)
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue(0m);
 
                     b.HasKey("Id");
 
@@ -152,6 +189,8 @@ namespace GymAdmin.Infrastructure.Migrations
                     b.HasIndex("FechaPago");
 
                     b.HasIndex("MetodoPagoId");
+
+                    b.HasIndex("MontoFinal");
 
                     b.HasIndex("PlanMembresiaId");
 
@@ -257,7 +296,7 @@ namespace GymAdmin.Infrastructure.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Telefono")
+                    b.Property<string>("TelefonoEncrypted")
                         .HasMaxLength(20)
                         .HasColumnType("TEXT");
 
@@ -275,9 +314,6 @@ namespace GymAdmin.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("DniEncrypted")
-                        .IsUnique();
-
-                    b.HasIndex("Telefono")
                         .IsUnique();
 
                     b.ToTable("Socios");

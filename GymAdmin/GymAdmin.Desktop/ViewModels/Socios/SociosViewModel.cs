@@ -146,7 +146,7 @@ public sealed partial class SociosViewModel : ViewModelBase, IDisposable
                 PageSize = PageSize,
                 SortBy = SortBy,
                 SortDesc = SortDesc
-            };
+            };  
 
             var result = await _getAllSociosInteractor.ExecuteAsync(req, token);
 
@@ -322,7 +322,9 @@ public sealed partial class SociosViewModel : ViewModelBase, IDisposable
         "Registrar Asistencia",
         $"¿Querés registrar una asistencia de \"{SocioSeleccionado.NombreCompleto}\"? \n",
         accept: "Registrar",
-        cancel: "Cancelar");
+        cancel: "Cancelar",
+        COLOR_PRIMARIO,
+        COLOR_ROJO);
 
         if (!confirm) return;
         try

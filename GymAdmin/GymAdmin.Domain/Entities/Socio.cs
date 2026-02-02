@@ -8,7 +8,6 @@ public class Socio : EntityBase, IEncryptableEntity
     public string DniEncrypted { get; set; } = string.Empty;
     public string Nombre { get; set; }
     public string Apellido { get; set; }
-    public string? Telefono { get; set; } = string.Empty;
     public DateTime FechaRegistro { get; set; } = DateTime.UtcNow;
     public string DniHash { get; set; } = null!;
     public int CreditosRestantes { get; set; }
@@ -16,7 +15,9 @@ public class Socio : EntityBase, IEncryptableEntity
     public DateTime? ExpiracionMembresia { get; set; } = DateTime.UtcNow.AddDays(-1);
     public bool IsActive { get; set; } = false;
     public string? TelefonoHash { get; set; } = string.Empty;
+    public string? TelefonoEncrypted { get; set; } = string.Empty;
 
+    [NotMapped] public string? Telefono { get; set; } = string.Empty;
     [NotMapped] public string Dni { get; set; }
     [NotMapped] public DateTime? UltimaAsistencia { get; set; }
     [NotMapped] public string? TelefonoDecrypted { get; set; } = string.Empty;
@@ -72,8 +73,8 @@ public class Socio : EntityBase, IEncryptableEntity
         if (!string.IsNullOrEmpty(DniEncrypted))
             Dni = cryptoService.Decrypt(DniEncrypted);
         
-        if (!string.IsNullOrEmpty(Telefono))
-            TelefonoDecrypted = cryptoService.Decrypt(Telefono);
+        if (!string.IsNullOrEmpty(TelefonoEncrypted))
+            TelefonoDecrypted = cryptoService.Decrypt(TelefonoEncrypted);
     }
 
     public void HandleEncryption(ICryptoService cryptoService)
@@ -84,10 +85,10 @@ public class Socio : EntityBase, IEncryptableEntity
             DniHash = cryptoService.ComputeHash(Dni);
 
         }
-        if (TelefonoDecrypted != null)
+        if (Telefono != null)
         {
-            Telefono = string.IsNullOrEmpty(Telefono) ? string.Empty : cryptoService.Encrypt(Telefono);
-            TelefonoHash = string.IsNullOrEmpty(TelefonoDecrypted) ? string.Empty : cryptoService.ComputeHash(TelefonoDecrypted);
+            TelefonoEncrypted = string.IsNullOrEmpty(Telefono) ? string.Empty : cryptoService.Encrypt(Telefono);
+            TelefonoHash = string.IsNullOrEmpty(Telefono) ? string.Empty : cryptoService.ComputeHash(Telefono);
         }
     }
 

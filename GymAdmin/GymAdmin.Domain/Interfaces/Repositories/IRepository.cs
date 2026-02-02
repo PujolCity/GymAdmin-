@@ -10,6 +10,7 @@ public interface IRepository<T> where T : EntityBase
     Task AddAsync(T entity, CancellationToken ct = default);
     void Update(T entity);
     void Remove(T entity);
+    Task RemoveAsync(T entity,  CancellationToken ct = default);
     void SoftDelete(T entity);
     Task SoftDeleteAsync(int id, CancellationToken ct = default);
     void Restore(T entity);
