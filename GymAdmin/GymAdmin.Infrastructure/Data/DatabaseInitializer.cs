@@ -1,5 +1,4 @@
 ﻿using GymAdmin.Domain.Entities;
-using GymAdmin.Domain.Enums;
 using GymAdmin.Domain.Interfaces.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -80,10 +79,10 @@ public class DatabaseInitializer
         // — Métodos de pago
         var metodos = new[]
         {
-            new MetodoPago { Nombre = "Efectivo", IsActive = true },
-            new MetodoPago { Nombre = "Tarjeta",  IsActive = true },
-            new MetodoPago { Nombre = "Transferencia", IsActive = true },
-            new MetodoPago { Nombre = "Mercado Pago", IsActive = true },
+            new MetodoPago { Nombre = "Efectivo", IsActive = true, Orden = 1 },
+            new MetodoPago { Nombre = "Tarjeta",  IsActive = true , Orden = 2},
+            new MetodoPago { Nombre = "Transferencia", IsActive = true, Orden = 3 },
+            new MetodoPago { Nombre = "Mercado Pago", IsActive = true, Orden = 4 },
         };
         _context.MetodosPago.AddRange(metodos);
         await _context.SaveChangesAsync(ct);
