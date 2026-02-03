@@ -58,7 +58,7 @@ jobs:
       # PROD usa appsettings.PROD.json
       - name: Prepare channel config (prod)
         shell: pwsh
-        run: Copy-Item "GymAdmin/GymAdmin.Desktop/appsettings.PROD.json" "publish/appsettings.json" -Force
+        run: Copy-Item "GymAdmin/GymAdmin.Desktop/appsettings.Prod.json" "publish/appsettings.json" -Force
 
       - name: Install Inno Setup
         run: choco install innosetup --yes
