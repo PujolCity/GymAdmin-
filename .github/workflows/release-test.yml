@@ -55,7 +55,7 @@ jobs:
       # TEST usa appsettings.Test.json (apunta a update-test.xml)
       - name: Prepare channel config (test)
         shell: pwsh
-        run: Copy-Item "GymAdmin/GymAdmin.Desktop/appsettings.Test.json" "publish/appsettings.json" -Force
+        run: Copy-Item "GymAdmin/GymAdmin.Desktop/appsettings.TEST.json" "publish/appsettings.json" -Force
 
       - name: Install Inno Setup
         run: choco install innosetup --yes
