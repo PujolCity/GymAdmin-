@@ -8,6 +8,12 @@ namespace GymAdmin.Infrastructure.Data;
 // COMANDO PARA MIGRACIONES EN CONSOLA DE GESTIÓN DE PAQUETES:
 // Add-Migration AddPropertiesToMetodosPago -Project GymAdmin.Infrastructure -StartupProject GymAdmin.Desktop
 
+// COMANDO PARA LANZAR GIT ACTION 
+// git checkout main
+// git pull
+// git tag -a v1.0.0 -m "Release v1.0.0"
+// git push origin v1.0.0
+
 public class GymAdminDbContext : DbContext
 {
     public ICryptoService _cryptoService;

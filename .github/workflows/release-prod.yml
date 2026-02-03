@@ -55,10 +55,10 @@ jobs:
       - name: Publish (self-contained)
         run: dotnet publish "$env:SOLUTION" -c Release -r win-x64 --self-contained true -p:PublishSingleFile=false -p:PublishTrimmed=false -p:Version=${{ steps.ver.outputs.VERSION }} -o publish
 
-      # PROD usa appsettings.json
+      # PROD usa appsettings.PROD.json
       - name: Prepare channel config (prod)
         shell: pwsh
-        run: Copy-Item "GymAdmin/GymAdmin.Desktop/appsettings.json" "publish/appsettings.json" -Force
+        run: Copy-Item "GymAdmin/GymAdmin.Desktop/appsettings.PROD.json" "publish/appsettings.json" -Force
 
       - name: Install Inno Setup
         run: choco install innosetup --yes
@@ -69,14 +69,21 @@ jobs:
           $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
           & $iscc "/DAppVersion=${{ steps.ver.outputs.VERSION }}" "/DChannel=prod" "Installer\GymAdmin.iss"
 
-      - name: Compute SHA256
+      - name: Compute SHA256 (auto-detect exe)
         id: sha
         shell: pwsh
         run: |
-          $file = "Installer\output\GymAdmin-${{ steps.ver.outputs.VERSION }}-Setup.exe"
-          $hash = (Get-FileHash $file -Algorithm SHA256).Hash
+          $ver = "${{ steps.ver.outputs.VERSION }}"
+          $exe = Get-ChildItem "Installer/output" -Filter "GymAdmin-$ver-Setup*.exe" | Select-Object -First 1
+          if (-not $exe) {
+            Write-Host "No encontré el EXE. Contenido de Installer/output:"
+            Get-ChildItem "Installer/output" -ErrorAction SilentlyContinue
+            throw "Installer EXE not found"
+          }
+          $hash = (Get-FileHash $exe.FullName -Algorithm SHA256).Hash
           echo "SHA256=$hash" >> $env:GITHUB_OUTPUT
-          echo "FILE=$file"   >> $env:GITHUB_OUTPUT
+          echo "FILE=$($exe.FullName -replace '\\','/')" >> $env:GITHUB_OUTPUT
+          echo "FILENAME=$($exe.Name)" >> $env:GITHUB_OUTPUT
 
       - name: Create/Update Release (attach installer)
         uses: softprops/action-gh-release@v2
@@ -86,15 +93,16 @@ jobs:
           draft: false
           prerelease: false
           files: |
-            ${{ steps.sha.outputs.FILE }}
+            Installer/output/*.exe
 
       - name: Generate site (update.xml + changelog)
         shell: pwsh
         run: |
           $ver = "${{ steps.ver.outputs.VERSION }}"
+          $fileName = "${{ steps.sha.outputs.FILENAME }}"
           $user = "${{ github.repository_owner }}"
           $repo = "${{ github.event.repository.name }}"
-          $url = "https://github.com/$user/$repo/releases/download/v$ver/GymAdmin-$ver-Setup.exe"
+          $url = "https://github.com/$user/$repo/releases/download/v$ver/$fileName"
           $sha = "${{ steps.sha.outputs.SHA256 }}"
           New-Item -ItemType Directory -Force -Path site | Out-Null
           $xml = @"
