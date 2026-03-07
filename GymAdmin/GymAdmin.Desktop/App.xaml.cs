@@ -9,7 +9,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Serilog;
-using System.IO;
 using System.Windows;
 
 namespace GymAdmin.Desktop;
@@ -59,8 +58,8 @@ public partial class App : Application
 
             AutoUpdater.RunUpdateAsAdmin = true;
             AutoUpdater.Mandatory = false;
-            AutoUpdater.ShowSkipButton = false;
-            AutoUpdater.ShowRemindLaterButton = false;
+            AutoUpdater.ShowSkipButton = true;
+            AutoUpdater.ShowRemindLaterButton = true;
 
             // fallback por si faltara config
             AutoUpdater.Start(string.IsNullOrWhiteSpace(feedUrl)

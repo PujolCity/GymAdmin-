@@ -1,5 +1,5 @@
 ﻿using GymAdmin.Domain.Interfaces.Services;
-using GymAdmin.Infrastructure.Config.FolderConfig;
+using GymAdmin.Infrastructure.Paths.FolderConfig;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
