@@ -30,20 +30,24 @@ public class DatabaseInitializer
         {
             _logger.LogInformation("Inicializando base de datos...");
 
-            dbPath = GetSqliteDbPath();
-
             // Verificar migraciones pendientes
             var pendingMigrations = await _context.Database.GetPendingMigrationsAsync(ct);
+            _logger.LogInformation("Migraciones pendientes: {Count}", pendingMigrations.Count());
+
             if (pendingMigrations.Any())
             {
-                _logger.LogInformation("Migraciones pendientes: {Count}", pendingMigrations.Count());
+                dbPath = GetSqliteDbPath();
 
-                // Crear backup ANTES de migrar
                 backupPath = _migrationSafetyBackup.CreatePreMigrationBackup(dbPath);
                 _logger.LogInformation("Backup pre-migración creado en: {BackupPath}", backupPath);
+
                 // Aplicar migraciones
                 await _context.Database.MigrateAsync(ct);
                 _logger.LogInformation("Migraciones aplicadas");
+            }
+            else
+            {
+                _logger.LogInformation("No hay migraciones pendientes. No se genera backup pre-migración.");
             }
 
             // Verificar tablas creadas
