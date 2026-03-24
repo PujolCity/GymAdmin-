@@ -1,5 +1,6 @@
 ﻿using GymAdmin.Domain.Entities;
-using GymAdmin.Domain.Interfaces.Services;
+using GymAdmin.Infrastructure.Backup;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -9,37 +10,48 @@ public class DatabaseInitializer
 {
     private readonly GymAdminDbContext _context;
     private readonly ILogger<DatabaseInitializer> _logger;
-    private readonly ICryptoService _crypto;
+    private readonly IMigrationSafetyBackup _migrationSafetyBackup;
 
     public DatabaseInitializer(GymAdminDbContext context,
         ILogger<DatabaseInitializer> logger,
-        ICryptoService crypto)
+        IMigrationSafetyBackup migrationSafetyBackup)
     {
         _context = context;
         _logger = logger;
-        _crypto = crypto;
+        _migrationSafetyBackup = migrationSafetyBackup;
     }
 
     public async Task InitializeAsync(CancellationToken ct = default)
     {
+        string? backupPath = null;
+        string? dbPath = null;
+
         try
         {
             _logger.LogInformation("Inicializando base de datos...");
 
+            dbPath = GetSqliteDbPath();
+
             // Verificar migraciones pendientes
             var pendingMigrations = await _context.Database.GetPendingMigrationsAsync(ct);
-            _logger.LogInformation("Migraciones pendientes: {Count}", pendingMigrations.Count());
+            if (pendingMigrations.Any())
+            {
+                _logger.LogInformation("Migraciones pendientes: {Count}", pendingMigrations.Count());
 
-            // Aplicar migraciones
-            await _context.Database.MigrateAsync(ct);
-            _logger.LogInformation("Migraciones aplicadas");
+                // Crear backup ANTES de migrar
+                backupPath = _migrationSafetyBackup.CreatePreMigrationBackup(dbPath);
+                _logger.LogInformation("Backup pre-migración creado en: {BackupPath}", backupPath);
+                // Aplicar migraciones
+                await _context.Database.MigrateAsync(ct);
+                _logger.LogInformation("Migraciones aplicadas");
+            }
 
             // Verificar tablas creadas
             await VerifyDatabaseStructureAsync(ct);
 
             if (await _context.MetodosPago.AnyAsync(ct))
             {
-                _logger.LogInformation("Seed omitido: ya existen socios en la base.");
+                _logger.LogInformation("Seed omitido: ya existen MetodosPago en la base.");
                 return;
             }
             //seed
@@ -48,27 +60,66 @@ public class DatabaseInitializer
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error inicializando base de datos");
+
+            // Si hubo backup y conocemos la DB, restauramos
+            if (!string.IsNullOrWhiteSpace(backupPath) && !string.IsNullOrWhiteSpace(dbPath))
+            {
+                try
+                {
+                    // Cerramos conexión
+                    await _context.Database.CloseConnectionAsync();
+
+                    _migrationSafetyBackup.Restore(backupPath, dbPath);
+                    _logger.LogWarning("Base de datos restaurada desde backup: {BackupPath}", backupPath);
+                }
+                catch (Exception restoreEx)
+                {
+                    _logger.LogError(restoreEx, "Falló la restauración del backup pre-migración");
+                }
+            }
+
             throw;
         }
+    }
+
+    private string GetSqliteDbPath()
+    {
+        var connection = _context.Database.GetDbConnection();
+
+        if (connection is SqliteConnection sqliteConnection)
+            return sqliteConnection.DataSource;
+
+        throw new InvalidOperationException("La conexión actual no es SQLite.");
     }
 
     private async Task VerifyDatabaseStructureAsync(CancellationToken ct = default)
     {
         var connection = _context.Database.GetDbConnection();
-        await connection.OpenAsync();
+        var shouldClose = connection.State != System.Data.ConnectionState.Open;
 
-        using var command = connection.CreateCommand();
-        command.CommandText = "SELECT name FROM sqlite_master WHERE type = 'table';";
-
-        using var reader = await command.ExecuteReaderAsync(ct);
-
-        var tables = new List<string>();
-        while (await reader.ReadAsync(ct))
+        try
         {
-            tables.Add(reader.GetString(0));
-        }
+            if (shouldClose)
+                await _context.Database.OpenConnectionAsync(ct);
 
-        _logger.LogInformation("Tablas en la BD: {Tables}", string.Join(", ", tables));
+            await using var command = connection.CreateCommand();
+            command.CommandText = "SELECT name FROM sqlite_master WHERE type = 'table';";
+
+            var tables = new List<string>();
+
+            await using var reader = await command.ExecuteReaderAsync(ct);
+            while (await reader.ReadAsync(ct))
+            {
+                tables.Add(reader.GetString(0));
+            }
+
+            _logger.LogDebug("Tablas en la BD: {Tables}", string.Join(", ", tables));
+        }
+        finally
+        {
+            if (shouldClose)
+                await _context.Database.CloseConnectionAsync();
+        }
     }
 
 
@@ -98,8 +149,7 @@ public class DatabaseInitializer
         _context.PlanesMembresia.AddRange(planes);
         await _context.SaveChangesAsync(ct);
 
-        await _context.SaveChangesAsync(ct);
-
+        //await _context.SaveChangesAsync(ct);
         _logger.LogInformation("Seed completado: {Planes} planes, {Metodos} métodos.",
             planes.Length, metodos.Length);
     }
