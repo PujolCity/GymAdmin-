@@ -5,10 +5,13 @@ using GymAdmin.Applications.Interactor.PlanesMembresia;
 using GymAdmin.Applications.Interactor.SociosInteractors;
 using GymAdmin.Domain.Interfaces.Repositories;
 using GymAdmin.Domain.Interfaces.Services;
-using GymAdmin.Infrastructure.Config.FolderConfig;
+using GymAdmin.Infrastructure.Backup;
 using GymAdmin.Infrastructure.Config.Options;
 using GymAdmin.Infrastructure.Data;
 using GymAdmin.Infrastructure.Data.Repositories;
+using GymAdmin.Infrastructure.Paths;
+using GymAdmin.Infrastructure.Paths.BackupPaths;
+using GymAdmin.Infrastructure.Paths.FolderConfig;
 using GymAdmin.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -23,7 +26,9 @@ public static class ConfigurationServiceCollectionExtensions
     public static IServiceCollection ConfigureDesktopInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         services.Configure<PathsConfig>(configuration.GetSection(nameof(PathsConfig)));
-        services.AddSingleton<IAppPaths, AppPaths>();
+        services.Configure<BackupConfig>(configuration.GetSection(nameof(BackupConfig)));
+
+        services.AddPathAndBackupServices();
 
         services.AddLoggingConfiguration(configuration);
         services.AddDatabaseConfiguration(configuration);
@@ -33,6 +38,16 @@ public static class ConfigurationServiceCollectionExtensions
 
         // Servicio Encriptado
         services.AddSingleton<ICryptoService, AesCryptoService>();
+
+        return services;
+    }
+    private static IServiceCollection AddPathAndBackupServices(this IServiceCollection services)
+    {
+        services.AddSingleton<IPathResolver, PathResolver>();
+        services.AddSingleton<IAppPaths, AppPaths>();
+        services.AddSingleton<IBackupPaths, BackupPaths>();
+
+        services.AddSingleton<IMigrationSafetyBackup, SqliteMigrationSafetyBackup>();
 
         return services;
     }

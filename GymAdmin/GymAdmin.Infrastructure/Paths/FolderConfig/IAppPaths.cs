@@ -1,4 +1,4 @@
-﻿namespace GymAdmin.Infrastructure.Config.FolderConfig;
+﻿namespace GymAdmin.Infrastructure.Paths.FolderConfig;
 
 public interface IAppPaths
 {
