@@ -61,7 +61,7 @@ public class SqliteMigrationSafetyBackup : IMigrationSafetyBackup
         var shmPath = dbPath + "-shm";
 
         if (File.Exists(walPath))
-            File.Delete(walPath);
+            File.Delete(walPath); 
 
         if (File.Exists(shmPath))
             File.Delete(shmPath);

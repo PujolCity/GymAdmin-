@@ -1,5 +1,6 @@
 ﻿using GymAdmin.Domain.Entities;
 using GymAdmin.Infrastructure.Backup;
+using GymAdmin.Infrastructure.Backup.DailyBackup;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -11,14 +12,17 @@ public class DatabaseInitializer
     private readonly GymAdminDbContext _context;
     private readonly ILogger<DatabaseInitializer> _logger;
     private readonly IMigrationSafetyBackup _migrationSafetyBackup;
+    private readonly IBackupService _backupService;
 
     public DatabaseInitializer(GymAdminDbContext context,
         ILogger<DatabaseInitializer> logger,
-        IMigrationSafetyBackup migrationSafetyBackup)
+        IMigrationSafetyBackup migrationSafetyBackup,
+        IBackupService backupService)
     {
         _context = context;
         _logger = logger;
         _migrationSafetyBackup = migrationSafetyBackup;
+        _backupService = backupService;
     }
 
     public async Task InitializeAsync(CancellationToken ct = default)
@@ -29,6 +33,9 @@ public class DatabaseInitializer
         try
         {
             _logger.LogInformation("Inicializando base de datos...");
+
+            _logger.LogInformation("Se limpian backups viejos");
+            await _backupService.CleanupOldBackupsAsync(ct);
 
             // Verificar migraciones pendientes
             var pendingMigrations = await _context.Database.GetPendingMigrationsAsync(ct);
@@ -49,6 +56,9 @@ public class DatabaseInitializer
             {
                 _logger.LogInformation("No hay migraciones pendientes. No se genera backup pre-migración.");
             }
+
+            _logger.LogInformation("Crando Backup diario...");
+            await _backupService.CreateDailyBackupAsync(ct);
 
             // Verificar tablas creadas
             await VerifyDatabaseStructureAsync(ct);
