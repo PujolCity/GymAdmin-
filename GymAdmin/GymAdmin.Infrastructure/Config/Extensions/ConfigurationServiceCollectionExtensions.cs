@@ -6,6 +6,7 @@ using GymAdmin.Applications.Interactor.SociosInteractors;
 using GymAdmin.Domain.Interfaces.Repositories;
 using GymAdmin.Domain.Interfaces.Services;
 using GymAdmin.Infrastructure.Backup;
+using GymAdmin.Infrastructure.Backup.DailyBackup;
 using GymAdmin.Infrastructure.Config.Options;
 using GymAdmin.Infrastructure.Data;
 using GymAdmin.Infrastructure.Data.Repositories;
@@ -46,8 +47,9 @@ public static class ConfigurationServiceCollectionExtensions
         services.AddSingleton<IPathResolver, PathResolver>();
         services.AddSingleton<IAppPaths, AppPaths>();
         services.AddSingleton<IBackupPaths, BackupPaths>();
-
+        
         services.AddSingleton<IMigrationSafetyBackup, SqliteMigrationSafetyBackup>();
+        services.AddScoped<IBackupService, BackupService>();
 
         return services;
     }
