@@ -17,41 +17,13 @@
         </TabItem>
         
         <!-- General -->
-        <TabItem Header="General" DataContext="{Binding ConfigGeneralViewModel}">
+        <!--<TabItem Header="General" DataContext="{Binding ConfigGeneralViewModel}">
             <configViews:ConfigGeneralView />
-        </TabItem>
-
-        <!--
-        <TabItem Header="General">
-           
-        </TabItem>
-
-        --><!-- Importar / Exportar --><!--
-        <TabItem Header="Importar / Exportar">
-            <StackPanel Margin="16" Orientation="Vertical" >
-                --><!-- Export CSV: socios, pagos, rango fechas -->
-                <!-- Descargar plantilla XLSX -->
-                <!-- Import XLSX: seleccionar archivo, botón Validar (dry-run) => muestra grilla de errores -->
-                <!-- Si ok: botón Importar definitivo --><!--
-            </StackPanel>
-        </TabItem>
-
-        --><!-- Backups --><!--
-        <TabItem Header="Backups">
-            <StackPanel Margin="16">
-                --><!-- Carpeta destino (Examinar...) -->
-                <!-- Botón: Generar backup manual (zip con CSVs) -->
-                <!-- Histórico corto (últimos 5), con link “Abrir carpeta” --><!--
-            </StackPanel>
-        </TabItem>
-
-        --><!-- Avanzado --><!--
-        <TabItem Header="Avanzado">
-            <StackPanel Margin="16">
-                --><!-- Exportar configuración (JSON), Importar configuración -->
-                <!-- PIN para ingresar a Configuración -->
-                <!-- Reset a fábrica --><!--
-            </StackPanel>
         </TabItem>-->
+
+        <TabItem Header="Backups" DataContext="{Binding BackupViewModel}">
+            <configViews:BackupView />
+        </TabItem>
+        
     </TabControl>
 </UserControl>
