@@ -1,4 +1,5 @@
 ﻿using GymAdmin.Applications.Interactor.AsistenciaInteractors;
+using GymAdmin.Applications.Interactor.BackUpInteractor;
 using GymAdmin.Applications.Interactor.ConfiguracionInteractors.MetodoPago;
 using GymAdmin.Applications.Interactor.PagosInteractors;
 using GymAdmin.Applications.Interactor.PlanesMembresia;
@@ -83,6 +84,8 @@ public static class ConfigurationServiceCollectionExtensions
         services.AddTransient<IMoveDownInteractor, MoveDownInteractor>();
         services.AddTransient<IMoveUpInteractor, MoveUpInteractor>();
 
+        services.AddTransient<IRestoreBackupInteractor, RestoreBackupInteractor>();
+
         return services;
     }
 
@@ -93,6 +96,7 @@ public static class ConfigurationServiceCollectionExtensions
         services.AddTransient<IPagosServices, PagosServices>();
         services.AddTransient<IAsistenciaService, AsistenciaService>();
         services.AddTransient<IMetodoPagoService, MetodoPagoService>();
+        services.AddTransient<IBackupRestoreService, BackupRestoreService>();
 
         return services;
     }

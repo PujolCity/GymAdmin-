@@ -1,4 +1,5 @@
-﻿using GymAdmin.Desktop.ViewModels;
+﻿using GymAdmin.Desktop.Services;
+using GymAdmin.Desktop.ViewModels;
 using GymAdmin.Desktop.ViewModels.Asistencia;
 using GymAdmin.Desktop.ViewModels.Configuracion;
 using GymAdmin.Desktop.ViewModels.Dialogs;
@@ -16,6 +17,11 @@ public static class ConfigUI
     {
         services.AddViewModels();
         services.AddWindows();
+
+        // services
+        services.AddTransient<IFileDialogService, FileDialogService>();
+        services.AddTransient<IOverlayDialogService, OverlayDialogService>();
+
         return services;
     }
 
@@ -37,6 +43,7 @@ public static class ConfigUI
         services.AddTransient<ConfigViewModel>();
         services.AddTransient<MetodoPagoViewModel>();
         services.AddTransient<ConfigGeneralViewModel>();
+        services.AddTransient<BackupViewModel>();
 
         return services;
     }

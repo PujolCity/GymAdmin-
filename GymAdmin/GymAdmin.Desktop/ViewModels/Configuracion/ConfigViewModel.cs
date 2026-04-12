@@ -5,12 +5,15 @@ public partial class ConfigViewModel : ViewModelBase, IDisposable
     private CancellationTokenSource? _cts;
     public MetodoPagoViewModel MetodoPagoViewModel { get; }
     public ConfigGeneralViewModel ConfigGeneralViewModel { get; }
+    public BackupViewModel BackupViewModel { get; }
 
     public ConfigViewModel(MetodoPagoViewModel metodoPagoViewModel,
-        ConfigGeneralViewModel configGeneralViewModel)
+        ConfigGeneralViewModel configGeneralViewModel,
+        BackupViewModel backupViewModel)
     {
         MetodoPagoViewModel = metodoPagoViewModel;
         ConfigGeneralViewModel = configGeneralViewModel;
+        BackupViewModel = backupViewModel;
     }
 
     public ConfigViewModel()
