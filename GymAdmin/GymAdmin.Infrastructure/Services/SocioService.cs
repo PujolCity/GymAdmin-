@@ -211,9 +211,6 @@ public class SocioService : ISocioService
                 socio.PlanPrecio = 0m;
             }
 
-            if (socio is Socio s)
-                s.ExpireIfNeeded();
-
             socios.Add(socio);
         }
 

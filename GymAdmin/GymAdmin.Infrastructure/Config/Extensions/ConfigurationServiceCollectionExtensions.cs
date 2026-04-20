@@ -11,6 +11,7 @@ using GymAdmin.Infrastructure.Backup.DailyBackup;
 using GymAdmin.Infrastructure.Config.Options;
 using GymAdmin.Infrastructure.Data;
 using GymAdmin.Infrastructure.Data.Repositories;
+using GymAdmin.Infrastructure.ExpirationService;
 using GymAdmin.Infrastructure.Paths;
 using GymAdmin.Infrastructure.Paths.BackupPaths;
 using GymAdmin.Infrastructure.Paths.FolderConfig;
@@ -91,6 +92,7 @@ public static class ConfigurationServiceCollectionExtensions
 
     private static IServiceCollection AddServices(this IServiceCollection services)
     {
+        services.AddSingleton<ISocioExpirationService, SocioExpirationService>();
         services.AddTransient<ISocioService, SocioService>();
         services.AddTransient<IPlanMembresiaService, PlanMembresiaService>();
         services.AddTransient<IPagosServices, PagosServices>();

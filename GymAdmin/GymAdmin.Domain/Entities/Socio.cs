@@ -97,11 +97,14 @@ public class Socio : EntityBase, IEncryptableEntity
 
     public void ExpireIfNeeded()
     {
-        if (IsMembresiaExpirada && CreditosRestantes > 0)
-        {
-            CreditosRestantes = 0;
-            IsActive = false;
-        }
+        var sinCreditos = CreditosRestantes <= 0;
+        var membresiaExpirada = IsMembresiaExpirada;
+
+        if (!sinCreditos && !membresiaExpirada)
+            return;
+
+        CreditosRestantes = 0;
+        IsActive = false;
     }
 
     public bool UsarCredito()
