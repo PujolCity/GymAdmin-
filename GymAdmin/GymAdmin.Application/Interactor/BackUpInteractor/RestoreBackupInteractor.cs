@@ -26,17 +26,9 @@ public class RestoreBackupInteractor : IRestoreBackupInteractor
 
         try
         {
-            using var zip = ZipFile.OpenRead(zipFilePath);
+            var result = await _backupRestoreService.RestoreDailyBackupAsync(zipFilePath, restoreLogs, ct);
 
-            var hasDb = zip.Entries.Any(x =>
-                string.Equals(Path.GetFileName(x.FullName), "gymadmin.db", StringComparison.OrdinalIgnoreCase));
-
-            if (!hasDb)
-                return Result.Fail("El ZIP seleccionado no contiene un backup válido. Falta gymadmin.db.");
-
-            await _backupRestoreService.RestoreDailyBackupAsync(zipFilePath, restoreLogs, ct);
-
-            return Result.Ok();
+            return result;
         }
         catch (InvalidDataException)
         {
