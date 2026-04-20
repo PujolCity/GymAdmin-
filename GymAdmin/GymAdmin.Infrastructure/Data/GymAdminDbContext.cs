@@ -11,8 +11,8 @@ namespace GymAdmin.Infrastructure.Data;
 // COMANDO PARA LANZAR GIT ACTION (poner version actual)
 // git checkout main
 // git pull
-// git tag -a v1.2.1 -m "Release v1.2.1"
-// git push origin v1.2.1
+// git tag -a v1.2.3 -m "Release v1.2.3"
+// git push origin v1.2.3
 
 public class GymAdminDbContext : DbContext
 {
