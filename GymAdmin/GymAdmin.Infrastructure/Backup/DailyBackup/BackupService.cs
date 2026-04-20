@@ -3,7 +3,6 @@ using GymAdmin.Infrastructure.Data;
 using GymAdmin.Infrastructure.Paths.BackupPaths;
 using GymAdmin.Infrastructure.Paths.FolderConfig;
 using Microsoft.Data.Sqlite;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.IO.Compression;
@@ -41,7 +40,7 @@ public class BackupService : IBackupService
 
         Directory.CreateDirectory(_backupPaths.BackupRoot);
 
-        var dbPath = _context.Database.GetDbConnection().DataSource;
+        var dbPath = _appPaths.DbFile;
         var logsDir = _appPaths.LogsDir;
 
         if (string.IsNullOrWhiteSpace(dbPath) || !File.Exists(dbPath))
@@ -67,7 +66,8 @@ public class BackupService : IBackupService
             _logger.LogInformation("Iniciando backup diario. TempDir: {TempDir}", tempDir);
 
             // 1. Backup seguro de SQLite
-            var dbDest = Path.Combine(tempDir, "gymadmin.db");
+            var fileDbName = Path.GetFileName(_appPaths.DbFile);
+            var dbDest = Path.Combine(tempDir, fileDbName);
             _logger.LogInformation("Respaldando base SQLite desde {DbPath} hacia {DbDest}", dbPath, dbDest);
             await BackupDatabaseAsync(dbPath, dbDest, ct);
 

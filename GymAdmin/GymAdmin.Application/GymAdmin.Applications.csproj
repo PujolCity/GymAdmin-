@@ -15,8 +15,4 @@
     <ProjectReference Include="..\GymAdmin.Domain\GymAdmin.Domain.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Interactor\BackUpInteractor\" />
-  </ItemGroup>
-
 </Project>

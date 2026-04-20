@@ -65,9 +65,12 @@ public class SqliteMigrationSafetyBackup : IMigrationSafetyBackup
 
         if (File.Exists(shmPath))
             File.Delete(shmPath);
+
+        if (!string.IsNullOrWhiteSpace(dbDirectory))
+            PruneOldMigrationBackups(dbDirectory, keepLast: 1);
     }
 
-    private static void PruneOldMigrationBackups(string folder, int keepLast = 5)
+    private static void PruneOldMigrationBackups(string folder, int keepLast = 1)
     {
         var files = new DirectoryInfo(folder)
             .GetFiles("pre-migrate_*.db")

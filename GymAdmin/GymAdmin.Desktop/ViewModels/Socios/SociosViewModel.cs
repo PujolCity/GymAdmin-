@@ -5,6 +5,7 @@ using GymAdmin.Applications.DTOs.PagosDto;
 using GymAdmin.Applications.DTOs.SociosDto;
 using GymAdmin.Applications.Interactor.AsistenciaInteractors;
 using GymAdmin.Applications.Interactor.SociosInteractors;
+using GymAdmin.Desktop.Services;
 using GymAdmin.Desktop.ViewModels.Dialogs;
 using GymAdmin.Desktop.ViewModels.Pagos;
 using GymAdmin.Desktop.Views.Dialogs;
@@ -15,7 +16,7 @@ using System.Windows;
 
 namespace GymAdmin.Desktop.ViewModels.Socios;
 
-public sealed partial class SociosViewModel : ViewModelBase, IDisposable
+public sealed partial class SociosViewModel : ViewModelBase, IDisposable, IDialogHost
 {
     private const string COLOR_ROJO = "DangerButtonStyle";
     private const string COLOR_PRIMARIO = "PrimaryButtonStyle";
@@ -23,6 +24,7 @@ public sealed partial class SociosViewModel : ViewModelBase, IDisposable
     private readonly IGetAllSociosInteractor _getAllSociosInteractor;
     private readonly IDeleteSocioInteractor _deleteSocioInteractor;
     private readonly ICreateAsistenciaInteractor _createAsistenciaInteractor;
+    private readonly IOverlayDialogService _dialogService;
 
     private CancellationTokenSource? _cts;
     private readonly IServiceProvider _sp;
@@ -95,7 +97,8 @@ public sealed partial class SociosViewModel : ViewModelBase, IDisposable
     public SociosViewModel(IGetAllSociosInteractor getAll,
         IServiceProvider sp,
         IDeleteSocioInteractor deleteSocioInteractor,
-        ICreateAsistenciaInteractor createAsistenciaInteractor)
+        ICreateAsistenciaInteractor createAsistenciaInteractor,
+        IOverlayDialogService dialogService)
     {
         _getAllSociosInteractor = getAll;
         _deleteSocioInteractor = deleteSocioInteractor;
@@ -112,6 +115,7 @@ public sealed partial class SociosViewModel : ViewModelBase, IDisposable
                            EliminarSocioCommand, RegistrarPagoCommand, RegistrarAsistenciaCommand,
                            LimpiarFiltroCommand, ExportarCommand);
         _createAsistenciaInteractor = createAsistenciaInteractor;
+        _dialogService = dialogService;
     }
 
     partial void OnFiltroBusquedaChanged(string value) => _ = DebouncedReloadAsync();
@@ -146,7 +150,7 @@ public sealed partial class SociosViewModel : ViewModelBase, IDisposable
                 PageSize = PageSize,
                 SortBy = SortBy,
                 SortDesc = SortDesc
-            };  
+            };
 
             var result = await _getAllSociosInteractor.ExecuteAsync(req, token);
 
@@ -240,7 +244,8 @@ public sealed partial class SociosViewModel : ViewModelBase, IDisposable
     {
         if (SocioSeleccionado is null) return;
 
-        var confirm = await ShowConfirmAsync(
+        var confirm = await _dialogService.ShowConfirmAsync(
+            this,
          "Eliminar Socio",
          $"¿Querés eliminar al socio \"{SocioSeleccionado.NombreCompleto}\"? \n",
          accept: "Eliminar",
@@ -298,7 +303,8 @@ public sealed partial class SociosViewModel : ViewModelBase, IDisposable
 
         if (SocioSeleccionado.Estado != "Activo")
         {
-            await ShowConfirmAsync(
+            await _dialogService.ShowConfirmAsync(
+                this,
                 "Registrar Asistencia",
                 $"No se puede registrar la asistencia de un socio inactivo.\n" +
                 $"Por favor, primero activá el estado del socio \"{SocioSeleccionado.NombreCompleto}\".",
@@ -309,7 +315,8 @@ public sealed partial class SociosViewModel : ViewModelBase, IDisposable
         }
         if (SocioSeleccionado.CreditosRestantes <= 0)
         {
-            await ShowConfirmAsync(
+            await _dialogService.ShowConfirmAsync(
+                this,
                 "Registrar Asistencia",
                 $"El socio \"{SocioSeleccionado.NombreCompleto}\" no tiene créditos disponibles.\n" +
                 $"Por favor, primero cargá créditos al socio.",
@@ -318,7 +325,8 @@ public sealed partial class SociosViewModel : ViewModelBase, IDisposable
             return;
         }
 
-        var confirm = await ShowConfirmAsync(
+        var confirm = await _dialogService.ShowConfirmAsync(
+            this,
         "Registrar Asistencia",
         $"¿Querés registrar una asistencia de \"{SocioSeleccionado.NombreCompleto}\"? \n",
         accept: "Registrar",
@@ -389,34 +397,5 @@ public sealed partial class SociosViewModel : ViewModelBase, IDisposable
     {
         _cts?.Cancel();
         _cts?.Dispose();
-    }
-
-    private async Task<bool> ShowConfirmAsync(string title, string message, string accept = "Eliminar", string cancel = "Cancelar", string acceptColor = COLOR_ROJO, string cancelColor = COLOR_PRIMARIO, bool showCancel = true)
-    {
-        var vm = new ConfirmDialogViewModel
-        {
-            Title = title,
-            Message = message,
-            AcceptText = accept,
-            CancelText = cancel,
-            AcceptButtonStyle = (Style)Application.Current.FindResource(acceptColor),
-            CancelButtonStyle = (Style)Application.Current.FindResource(cancelColor),
-            ShowCancelButton = showCancel
-        };
-
-        var view = new ConfirmDialogView { DataContext = vm };
-
-        // Mostrar overlay
-        DialogContent = view;
-        IsDialogOpen = true;
-
-        // Esperar la selección del usuario
-        var ok = await vm.Task;
-
-        // Cerrar overlay
-        IsDialogOpen = false;
-        DialogContent = null;
-
-        return ok;
     }
 }
