@@ -80,7 +80,7 @@ public class BackupRestoreService : IBackupRestoreService
             _logger.LogInformation("DB reemplazada correctamente");
 
             // Simulación de prueba:
-             throw new Exception("Falla simulada después de reemplazar la DB");
+            // throw new Exception("Falla simulada después de reemplazar la DB");
 
             if (restoreLogs)
             {
