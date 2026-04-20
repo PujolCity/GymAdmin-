@@ -124,4 +124,7 @@ public class Repository<T> : IRepository<T> where T : EntityBase
         if (entity != null)
             Restore(entity);
     }
+
+    public void UpdateRange(IEnumerable<T> entities)
+     => _dbSet.UpdateRange(entities);
 }

@@ -109,6 +109,8 @@ public class AsistenciaService : IAsistenciaService
 
         asistencia.SeUsoCredito = seUsoCredito;
         asistencia.Socio = socio;
+        socio.ExpireIfNeeded();
+
         try
         {
             await _unitOfWork.AsistenciaRepo.AddAsync(asistencia, ct);

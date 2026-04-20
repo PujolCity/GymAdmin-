@@ -4,6 +4,7 @@ using GymAdmin.Desktop.ConfigStartup;
 using GymAdmin.Infrastructure.Config.Extensions;
 using GymAdmin.Infrastructure.Config.Options;
 using GymAdmin.Infrastructure.Data;
+using GymAdmin.Infrastructure.ExpirationService;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -46,26 +47,7 @@ public partial class App : Application
             .UseSerilog()
             .Build();
 
-        // Inicializar DB si aplica (migraciones/seed)
-        using (var scope = _host.Services.CreateScope())
-        {
-            var initializer = scope.ServiceProvider.GetRequiredService<DatabaseInitializer>();
-            initializer.InitializeAsync().GetAwaiter().GetResult();
-
-            // Leer Options y lanzar AutoUpdater con el feed correcto
-            var updateOpts = scope.ServiceProvider.GetRequiredService<IOptions<InstallerConfig>>().Value;
-            var feedUrl = updateOpts.FeedUrl ?? string.Empty;
-
-            AutoUpdater.RunUpdateAsAdmin = true;
-            AutoUpdater.Mandatory = false;
-            AutoUpdater.ShowSkipButton = true;
-            AutoUpdater.ShowRemindLaterButton = true;
-
-            // fallback por si faltara config
-            AutoUpdater.Start(string.IsNullOrWhiteSpace(feedUrl)
-                ? "https://pujolcity.github.io/GymAdmin-/update.xml"
-                : feedUrl);
-        }
+        RunStartupTasks();
 
         // Mostrar ventana principal
         var mainWindow = _host.Services.GetRequiredService<MainWindow>();
@@ -81,5 +63,42 @@ public partial class App : Application
         }
         Serilog.Log.CloseAndFlush();
         base.OnExit(e);
+    }
+
+    private void RunStartupTasks()
+    {
+        using var scope = _host.Services.CreateScope();
+        var services = scope.ServiceProvider;
+
+        InitializeDatabase(services);
+        ExpireSocios(services);
+        ConfigureAutoUpdater(services);
+    }
+
+    private static void InitializeDatabase(IServiceProvider services)
+    {
+        var initializer = services.GetRequiredService<DatabaseInitializer>();
+        initializer.InitializeAsync().GetAwaiter().GetResult();
+    }
+
+    private static void ExpireSocios(IServiceProvider services)
+    {
+        var expirationService = services.GetRequiredService<ISocioExpirationService>();
+        expirationService.ExpirarSociosVencidosAsync().GetAwaiter().GetResult();
+    }
+
+    private static void ConfigureAutoUpdater(IServiceProvider services)
+    {
+        var updateOpts = services.GetRequiredService<IOptions<InstallerConfig>>().Value;
+        var feedUrl = updateOpts.FeedUrl ?? string.Empty;
+
+        AutoUpdater.RunUpdateAsAdmin = true;
+        AutoUpdater.Mandatory = false;
+        AutoUpdater.ShowSkipButton = true;
+        AutoUpdater.ShowRemindLaterButton = true;
+
+        AutoUpdater.Start(string.IsNullOrWhiteSpace(feedUrl)
+            ? "https://pujolcity.github.io/GymAdmin-/update.xml"
+            : feedUrl);
     }
 }

@@ -9,6 +9,7 @@ public interface IRepository<T> where T : EntityBase
     Task<IEnumerable<T>> GetAllAsync( CancellationToken ct = default);
     Task AddAsync(T entity, CancellationToken ct = default);
     void Update(T entity);
+    void UpdateRange(IEnumerable<T> entities);
     void Remove(T entity);
     Task RemoveAsync(T entity,  CancellationToken ct = default);
     void SoftDelete(T entity);
