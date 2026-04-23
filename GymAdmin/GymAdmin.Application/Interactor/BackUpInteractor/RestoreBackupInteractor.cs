@@ -1,34 +1,32 @@
-﻿using GymAdmin.Domain.Interfaces.Services;
+﻿using FluentValidation;
+using GymAdmin.Applications.DTOs.Asistencia;
+using GymAdmin.Applications.DTOs.ConfiguracionDto;
+using GymAdmin.Domain.Interfaces.Services;
 using GymAdmin.Domain.Results;
-using System.IO.Compression;
 
 namespace GymAdmin.Applications.Interactor.BackUpInteractor;
 
 public class RestoreBackupInteractor : IRestoreBackupInteractor
 {
     private readonly IBackupRestoreService _backupRestoreService;
+    private readonly IValidator<RestoreBackupDto> _validator;
 
-    public RestoreBackupInteractor(IBackupRestoreService backupRestoreService)
+    public RestoreBackupInteractor(IBackupRestoreService backupRestoreService,
+        IValidator<RestoreBackupDto> validator)
     {
         _backupRestoreService = backupRestoreService;
+        _validator = validator;
     }
 
-    public async Task<Result> ExecuteAsync(string zipFilePath, bool restoreLogs, CancellationToken ct = default)
+    public async Task<Result> ExecuteAsync(RestoreBackupDto restoreBackupDto, CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(zipFilePath))
-            return Result.Fail("Debe seleccionar un archivo ZIP.");
-
-        if (!File.Exists(zipFilePath))
-            return Result.Fail("El archivo seleccionado no existe.");
-
-        if (!string.Equals(Path.GetExtension(zipFilePath), ".zip", StringComparison.OrdinalIgnoreCase))
-            return Result.Fail("El archivo seleccionado no es un archivo ZIP válido.");
+        var validation = await _validator.ValidateAsync(restoreBackupDto, ct);
+        if (!validation.IsValid)
+            return Result.Fail(string.Join("; ", validation.Errors.Select(e => e.ErrorMessage)));
 
         try
         {
-            var result = await _backupRestoreService.RestoreDailyBackupAsync(zipFilePath, restoreLogs, ct);
-
-            return result;
+            return await _backupRestoreService.RestoreDailyBackupAsync(restoreBackupDto.ZipFilePath, restoreBackupDto.RestoreLogs, ct);
         }
         catch (InvalidDataException)
         {

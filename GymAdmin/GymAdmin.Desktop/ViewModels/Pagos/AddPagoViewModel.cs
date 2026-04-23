@@ -68,7 +68,7 @@ public sealed partial class AddPagoViewModel : ViewModelBase, IDataErrorInfo, ID
     [ObservableProperty] private bool hasPrecioInteracted;
     [ObservableProperty] private bool hasFechaPagoInteracted;
     [ObservableProperty] private bool hasVencimientoInteracted;
-    
+
     [ObservableProperty] private bool precioEditadoManualmente;
     partial void OnPrecioChanged(string value)
     {
@@ -140,7 +140,7 @@ public sealed partial class AddPagoViewModel : ViewModelBase, IDataErrorInfo, ID
     }
 
     [ObservableProperty] private string precio = string.Empty;
-  
+
     private void RecalcularTotales()
     {
         OnPropertyChanged(nameof(FormularioValido));
@@ -176,7 +176,7 @@ public sealed partial class AddPagoViewModel : ViewModelBase, IDataErrorInfo, ID
     public decimal? MontoFinal => CalcularMontoFinal();
     public string MontoFinalDisplay =>
         MontoFinal is null ? "—" : MontoFinal.Value.ToString("C", CultureInfo.CurrentCulture);
-    
+
     public decimal? Delta => CalcularDelta();
 
     private decimal? CalcularDelta()
@@ -277,8 +277,7 @@ public sealed partial class AddPagoViewModel : ViewModelBase, IDataErrorInfo, ID
             Planes.Clear();
             foreach (var p in planes.Items)
                 Planes.Add(p);
-            
-            PlanSeleccionado = Planes.FirstOrDefault();
+
 
             var request = new GetMetodoPagoRequest
             {
@@ -286,9 +285,14 @@ public sealed partial class AddPagoViewModel : ViewModelBase, IDataErrorInfo, ID
                 PageSize = 500
             };
             var result = await _getMetodosPago.ExecuteAsync(request, _cts.Token);
-
+         
+            PlanSeleccionado = Planes.FirstOrDefault();
             MetodosPago.Clear();
-            foreach (var metodo in result.Items) MetodosPago.Add(metodo);
+            foreach (var metodo in result.Items)
+                MetodosPago.Add(metodo);
+
+            OnPropertyChanged(nameof(FormularioValido));
+            GuardarCommand.NotifyCanExecuteChanged();
         }
         catch (OperationCanceledException) { }
         catch (Exception ex)
@@ -332,7 +336,8 @@ public sealed partial class AddPagoViewModel : ViewModelBase, IDataErrorInfo, ID
     public string this[string columnName] => columnName switch
     {
         nameof(SocioSeleccionado) => !HasSocioInteracted ? string.Empty
-            : SocioSeleccionado is null ? "Seleccioná un socio." : string.Empty,
+        : SocioSeleccionado is null ? "Seleccioná un socio." : string.Empty,
+
 
         nameof(PlanSeleccionado) => !HasPlanInteracted ? string.Empty
             : PlanSeleccionado is null ? "Seleccioná un plan." : string.Empty,
@@ -355,13 +360,15 @@ public sealed partial class AddPagoViewModel : ViewModelBase, IDataErrorInfo, ID
     };
 
     public bool FormularioValido =>
-        string.IsNullOrEmpty(this[nameof(SocioSeleccionado)]) &&
-        string.IsNullOrEmpty(this[nameof(PlanSeleccionado)]) &&
-        string.IsNullOrEmpty(this[nameof(MetodoSeleccionado)]) &&
-        string.IsNullOrEmpty(this[nameof(Precio)]) &&
-        string.IsNullOrEmpty(this[nameof(FechaPago)]) &&
-        string.IsNullOrEmpty(this[nameof(FechaVencimiento)]) &&
-        CreditosAsignados > 0;
+                SocioSeleccionado is not null &&
+                PlanSeleccionado is not null &&
+                MetodoSeleccionado is not null &&
+                decimal.TryParse(Precio, NumberStyles.Number, CultureInfo.InvariantCulture, out var monto) &&
+                monto >= 0 &&
+                FechaPago is not null &&
+                FechaVencimiento is not null &&
+                FechaVencimiento >= FechaPago &&
+                CreditosAsignados > 0;
 
     // --------- Commands ----------
     [RelayCommand(CanExecute = nameof(CanGuardar))]

@@ -318,7 +318,6 @@
                         Width="110" Height="32" Margin="8,0,0,0"
                         Style="{StaticResource PrimaryButtonStyle}"
                         Command="{Binding GuardarCommand}"
-                        IsEnabled="{Binding FormularioValido}"
                         IsDefault="True"/>
             </StackPanel>
         </Grid>

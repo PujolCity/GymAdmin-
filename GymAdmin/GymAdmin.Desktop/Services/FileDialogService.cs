@@ -9,7 +9,7 @@ public class FileDialogService : IFileDialogService
     {
         var dialog = new OpenFileDialog
         {
-            Title = "Seleccionar backup para restaurar",
+            Title = "Backups",
             Filter = "Archivos ZIP (*.zip)|*.zip",
             DefaultExt = ".zip",
             CheckFileExists = true,
