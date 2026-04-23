@@ -1,6 +1,6 @@
 ﻿using GymAdmin.Domain.Entities;
+using GymAdmin.Domain.Interfaces.Services;
 using GymAdmin.Infrastructure.Backup;
-using GymAdmin.Infrastructure.Backup.DailyBackup;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
