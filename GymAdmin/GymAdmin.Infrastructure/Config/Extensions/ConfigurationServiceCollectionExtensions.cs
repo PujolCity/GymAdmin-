@@ -49,7 +49,7 @@ public static class ConfigurationServiceCollectionExtensions
         services.AddSingleton<IPathResolver, PathResolver>();
         services.AddSingleton<IAppPaths, AppPaths>();
         services.AddSingleton<IBackupPaths, BackupPaths>();
-        
+
         services.AddSingleton<IMigrationSafetyBackup, SqliteMigrationSafetyBackup>();
         services.AddScoped<IBackupService, BackupService>();
 
@@ -86,6 +86,7 @@ public static class ConfigurationServiceCollectionExtensions
         services.AddTransient<IMoveUpInteractor, MoveUpInteractor>();
 
         services.AddTransient<IRestoreBackupInteractor, RestoreBackupInteractor>();
+        services.AddTransient<ICreateManualBackup, CreateManualBackup>();
 
         return services;
     }

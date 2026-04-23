@@ -1,5 +1,6 @@
-﻿using GymAdmin.Infrastructure.Config.Options;
-using GymAdmin.Infrastructure.Data;
+﻿using GymAdmin.Domain.Interfaces.Services;
+using GymAdmin.Domain.Results;
+using GymAdmin.Infrastructure.Config.Options;
 using GymAdmin.Infrastructure.Paths.BackupPaths;
 using GymAdmin.Infrastructure.Paths.FolderConfig;
 using Microsoft.Data.Sqlite;
@@ -14,17 +15,14 @@ public class BackupService : IBackupService
     private readonly IAppPaths _appPaths;
     private readonly IBackupPaths _backupPaths;
     private readonly BackupConfig _config;
-    private readonly GymAdminDbContext _context;
     private readonly ILogger<BackupService> _logger;
 
     public BackupService(ILogger<BackupService> logger,
-        GymAdminDbContext context,
         IOptions<BackupConfig> config,
         IBackupPaths backupPaths,
         IAppPaths appPaths)
     {
         _logger = logger;
-        _context = context;
         _config = config.Value;
         _backupPaths = backupPaths;
         _appPaths = appPaths;
@@ -37,25 +35,52 @@ public class BackupService : IBackupService
             _logger.LogInformation("AutoBackup deshabilitado.");
             return;
         }
+       
+        await CreateBackupAsync(
+           prefix: "gymadmin-daily",
+           includeTime: false,
+           skipIfAlreadyExists: true,
+           ct: ct);
 
+        return;
+    }
+
+    public async Task<Result<string>> CreateManualBackupAsync(CancellationToken ct = default)
+    {
+        var result = await CreateBackupAsync(
+            prefix: "gymadmin-manual",
+            includeTime: true,
+            skipIfAlreadyExists: false,
+            ct: ct);
+
+        return result!;
+    }
+
+    private async Task<Result<string>> CreateBackupAsync(
+    string prefix,
+    bool includeTime,
+    bool skipIfAlreadyExists,
+    CancellationToken ct = default)
+    {
         Directory.CreateDirectory(_backupPaths.BackupRoot);
 
         var dbPath = _appPaths.DbFile;
         var logsDir = _appPaths.LogsDir;
 
         if (string.IsNullOrWhiteSpace(dbPath) || !File.Exists(dbPath))
-        {
-            _logger.LogWarning("No se encontró la base de datos para backup. Ruta: {DbPath}", dbPath);
-            return;
-        }
+            return Result<string>.Fail($"No se encontró la base de datos para backup. Ruta: {dbPath}");
 
-        var fileName = $"gymadmin-daily-{DateTime.Now:yyyyMMdd}.zip";
+
+        var fileName = includeTime
+            ? $"{prefix}-{DateTime.Now:yyyyMMdd-HHmmss}.zip"
+            : $"{prefix}-{DateTime.Now:yyyyMMdd}.zip";
+
         var zipPath = Path.Combine(_backupPaths.BackupRoot, fileName);
 
-        if (File.Exists(zipPath))
+        if (skipIfAlreadyExists && File.Exists(zipPath))
         {
-            _logger.LogInformation("Ya existe backup diario para hoy: {ZipPath}", zipPath);
-            return;
+            _logger.LogInformation("Ya existe un backup para hoy: {ZipPath}", zipPath);
+            return Result<string>.Ok(zipPath);
         }
 
         var tempDir = Path.Combine(Path.GetTempPath(), $"gymadmin-backup-{Guid.NewGuid():N}");
@@ -63,15 +88,13 @@ public class BackupService : IBackupService
 
         try
         {
-            _logger.LogInformation("Iniciando backup diario. TempDir: {TempDir}", tempDir);
+            _logger.LogInformation("Iniciando creación de backup. TempDir: {TempDir}", tempDir);
 
-            // 1. Backup seguro de SQLite
-            var fileDbName = Path.GetFileName(_appPaths.DbFile);
+            var fileDbName = Path.GetFileName(dbPath);
             var dbDest = Path.Combine(tempDir, fileDbName);
             _logger.LogInformation("Respaldando base SQLite desde {DbPath} hacia {DbDest}", dbPath, dbDest);
             await BackupDatabaseAsync(dbPath, dbDest, ct);
 
-            // 2. Copia de logs
             if (Directory.Exists(logsDir))
             {
                 var logsDest = Path.Combine(tempDir, "Logs");
@@ -83,20 +106,23 @@ public class BackupService : IBackupService
                 _logger.LogInformation("La carpeta de logs no existe. Se omite. Ruta: {LogsDir}", logsDir);
             }
 
-            // 3. Crear ZIP final
+            // PRUEBA DE FALLO
+            // throw new Exception("Fallo forzado para test de backup.");
+            
             _logger.LogInformation("Creando archivo ZIP en {ZipPath}", zipPath);
             ZipFile.CreateFromDirectory(tempDir, zipPath, CompressionLevel.Optimal, false);
 
-            _logger.LogInformation("Backup diario creado correctamente: {ZipPath}", zipPath);
+            _logger.LogInformation("Backup creado correctamente: {ZipPath}", zipPath);
+            return Result<string>.Ok(zipPath);
         }
         catch (OperationCanceledException)
         {
-            _logger.LogWarning("La creación del backup diario fue cancelada.");
+            _logger.LogWarning("La creación del backup fue cancelada.");
             throw;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error creando backup diario.");
+            _logger.LogError(ex, "Error creando backup.");
             throw;
         }
         finally
@@ -104,9 +130,7 @@ public class BackupService : IBackupService
             try
             {
                 if (Directory.Exists(tempDir))
-                {
                     Directory.Delete(tempDir, true);
-                }
             }
             catch (Exception ex)
             {

@@ -21,7 +21,7 @@
             <configViews:ConfigGeneralView />
         </TabItem>-->
 
-        <TabItem Header="Backups" DataContext="{Binding BackupViewModel}">
+        <TabItem Header="Backups/Restore" DataContext="{Binding BackupViewModel}">
             <configViews:BackupView />
         </TabItem>
         

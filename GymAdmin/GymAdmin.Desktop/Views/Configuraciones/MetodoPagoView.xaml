@@ -83,24 +83,34 @@
 
                     <!-- Banner de error -->
                     <Border Background="#FFfdecea"
-         BorderBrush="#FFf5c2c7"
-         BorderThickness="1"
-         CornerRadius="6"
-         Padding="8"
-         Margin="0,8,0,0"
-         Visibility="{Binding ErrorMessage, Converter={StaticResource NullOrEmptyToVisibilityConverter}}">
-                        <DockPanel LastChildFill="True">
-                            <TextBlock Text="{Binding ErrorMessage}"
-                        Foreground="#FF58151c"
-                        TextWrapping="Wrap" />
-                            <Button Content="✕"
-                     DockPanel.Dock="Right"
-                     Margin="6,0,0,0"
-                     Padding="6,0"
-                     Width="32"
-                     Style="{StaticResource DangerButtonStyle}"    
-                     Command="{Binding ClearErrorCommand}"/>
-                        </DockPanel>
+        BorderBrush="#FFf5c2c7"
+        BorderThickness="1"
+        CornerRadius="6"
+        Padding="8"
+        Visibility="{Binding ErrorMessage, 
+    Converter={StaticResource NullOrEmptyToVisibilityConverter}}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Grid.Column="0"
+                    Text="{Binding ErrorMessage}"
+                    Foreground="#FF58151c"
+                    TextWrapping="Wrap"
+                    VerticalAlignment="Center" />
+
+                            <Button Grid.Column="1"
+                Content="✕"
+                Margin="8,0,0,0"
+                Padding="6,0"
+                Width="32"
+                Height="28"
+                VerticalAlignment="Top"
+                Style="{StaticResource DangerButtonStyle}"
+                Command="{Binding ClearErrorCommand}" />
+                        </Grid>
                     </Border>
                 </StackPanel>
 
